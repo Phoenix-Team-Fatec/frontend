@@ -59,7 +59,7 @@ export default function SignIn() {
                         <div className="flex justify-end">
                             <a href="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">forgot password?</a>
                         </div>
-                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer">
+                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer hover:bg-[#2A52A2]">
                             Sing in
                         </Button>
                     </form>
