@@ -14,6 +14,7 @@ export default function RootLayout({
           <Link href="/">Home</Link>
           <Link href="/Dashboard">Dashboard</Link>
           <Link href="/projetos">Projetos</Link>
+          <Link href="/tasks">Tarefas</Link>
         </nav>
         <main className="p-4">{children}</main>
       </body>
