@@ -1,0 +1,76 @@
+/* 🔹 Estilizando a página de tarefas */
+
+.tasks-container {
+    display: flex;
+    height: 100vh;
+    padding-left: 70px; /* 🔹 Espaço para a Sidebar */
+  }
+  
+  .tasks-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  
+  .tasks-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* 🔹 Organização das etapas */
+  .tasks-stages {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+  }
+  
+  .stage-card {
+    background: #f4f4f4;
+    padding: 16px;
+    border-radius: 8px;
+    width: 250px;
+  }
+  
+  .stage-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  
+  .add-task-button {
+    margin-top: 10px;
+    width: 100%;
+  }
+  
+  .tasks-list {
+    margin-top: 10px;
+  }
+  
+  .task-card {
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 6px;
+  }
+  
+  .task-content {
+    padding: 8px;
+  }
+  
+  .task-name {
+    font-weight: bold;
+  }
+  
+  .task-description {
+    font-size: 0.875rem;
+    color: gray;
+  }
+  
+  .task-assigned {
+    font-size: 0.75rem;
+    color: darkgray;
+  }
+  
+  .add-stage-button {
+    height: 100%;
+  }
+  
