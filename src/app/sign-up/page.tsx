@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, FormEvent } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Upload } from "lucide-react";
 import Cropper from "react-easy-crop";
+import axios from "axios";
 
 async function getCroppedImg(imageSrc: string, crop: any) {
     const image = new Image();
@@ -77,7 +78,48 @@ export default function SignUp() {
         if (preview && croppedAreaPixels) {
             const croppedImg = await getCroppedImg(preview, croppedAreaPixels);
             setCroppedImage(croppedImg);
-            setShowCropper(false); 
+            setShowCropper(false);
+        }
+    };
+
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("user_nome", firstName);
+        formData.append("user_sobrenome", lastName);
+        formData.append("user_email", email);
+        formData.append("password", password);
+
+        if (croppedImage) {
+            const response = await fetch(croppedImage);
+            const blob = await response.blob();
+            formData.append("user_foto", blob, "cropped.jpg");
+        }
+
+        try {
+            const response = await axios.post("http://localhost:3000/usuarios", formData, {
+                headers: { "Content-Type": "multipart/form-data" },
+            });
+            console.log("Usuário criado com sucesso", response.data);
+            alert("Usuário criado com sucesso")
+            window.location.href = "/sign-in";
+        } catch (error: any) {
+            console.error("Erro ao criar usuário", error.response?.data || error.message);
+
+            if (error.response && error.response.data) {
+                const errorMessage = error.response?.data?.details?.code || error.response?.data?.error;
+
+                if (errorMessage === "Já existe um usuário com esse email") {
+                    alert("Já existe um usuário com esse email");
+                } else if (errorMessage.includes("auth/weak-password")) {
+                    alert("A senha fornecida é muito fraca");
+                } else {
+                    alert("Erro: " + errorMessage);
+                }
+            } else {
+                alert("Erro ao criar usuário: " + error.message);
+            }
         }
     };
 
@@ -93,7 +135,7 @@ export default function SignUp() {
                     <div className="text-center space-y-2">
                         <h1 className="text-3xl font-bold tracking-tighter">Welcome to Lumen</h1>
                     </div>
-                    <form className="space-y-4">
+                    <form className="space-y-4" onSubmit={handleSubmit}>
                         <div className="flex space-x-3">
                             <div className="space-y-2">
                                 <Label htmlFor="firstName">First Name</Label>
@@ -151,7 +193,7 @@ export default function SignUp() {
                         <div className="space-y-2">
                             <Label htmlFor="photo">Upload Photo</Label>
                             <div className="relative">
-                                <Upload className="absolute left-2 top-1/2 transform -translate-y-1/2" size={20}/>
+                                <Upload className="absolute left-2 top-1/2 transform -translate-y-1/2" size={20} />
                                 <Input
                                     id="photo"
                                     type="file"
