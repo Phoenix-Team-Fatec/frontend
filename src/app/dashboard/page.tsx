@@ -17,18 +17,18 @@ export default function Dashboard() {
 
   return (
     <div className="flex">
-      <Sidebar />
+      <Sidebar/>
       <div className="p-6 flex flex-col items-center gap-4 w-full">
         {/* Centralização da imagem */}
         {imageVisible && (
-          <div className="flex justify-center items-center flex-col">
-            <img
-              src="https://storyset.com/work"
+          <div className="flex flex-col justify-center items-center min-h-screen">
+             <img
+              src="/Organizing projects-rafiki.png"
               alt="Work Illustration"
-              className="max-w-full h-auto"
-            />
+              className="w-[170px] h-[170px] object-contain"
+             />
             <p className="text-gray-500 text-sm mt-2">
-              Seus projetos aparecerão aqui, e quando a pessoa adicionar um card, a imagem desaparecerá.
+              Seus projetos aparecerão aqui
             </p>
           </div>
         )}
