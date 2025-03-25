@@ -7,6 +7,12 @@ import Image from "next/image";
 export default function Home() {
   const pathname = usePathname();
 
+  const scrollToSection = (id) => {
+    if (typeof window !== "undefined") {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
 
@@ -17,7 +23,7 @@ export default function Home() {
             pathname === "/sign-in" ? "text-[#355EAF]" : "text-black"
           } transition-colors duration-300 ease-in-out hover:text-[#355EAF]`}
         >
-          Sign In
+          Entrar
         </Link>
         <Link 
           href="/" 
@@ -25,16 +31,14 @@ export default function Home() {
             pathname === "/" ? "text-[#355EAF]" : "text-black"
           } transition-colors duration-300 ease-in-out hover:text-[#355EAF]`}
         >
-          Home
+          Início
         </Link>
-        <Link 
-          href="/about" 
-          className={`${
-            pathname === "/about" ? "text-[#355EAF]" : "text-black"
-          } transition-colors duration-300 ease-in-out hover:text-[#355EAF]`}
+        <button 
+          onClick={() => scrollToSection("section1")} 
+          className="text-black transition-colors duration-300 ease-in-out hover:text-[#355EAF]"
         >
-          About Us
-        </Link>
+          Sobre Nós
+        </button>
       </nav>
 
       <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat"
@@ -61,7 +65,7 @@ export default function Home() {
             <p className="text-base font-semibold text-gray-700 ">
               O Lumen é uma plataforma projetada para ajudar estudantes e pesquisadores a gerenciarem suas tarefas, projetos e prazos com facilidade.
             </p>
-            <Link href={"/sign-up"}>
+            <Link href="/sign-up">
               <button className="mt-4 px-12 py-3 bg-[#355EAF] text-white font-medium rounded-[25px] 
               text-base transition-all duration-300 ease-in-out hover:bg-[#2C4B8B] cursor-pointer">
                 Começar
@@ -72,7 +76,7 @@ export default function Home() {
       </div>
 
       {/* Section 1 */}
-      <section className="h-screen flex items-center justify-center bg-gray-100 p-10">
+      <section id="section1" className="h-screen flex items-center justify-center bg-gray-100 p-10">
         <div className="text-center space-y-4 max-w-2xl mx-auto">
           <p className="text-3xl font-semibold text-[#355EAF]">Gerencie suas tarefas com facilidade</p>
           <p className="text-lg text-gray-600">

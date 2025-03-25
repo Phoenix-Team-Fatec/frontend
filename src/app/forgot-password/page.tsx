@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from "react";
-import {motion} from "framer-motion";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,6 @@ export default function ForgotPassword() {
     const [email, setEmail] = useState('')
 
     return (
-
         <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat" 
         style={{
             backgroundImage: "url('/sign.png')", 
@@ -25,12 +24,12 @@ export default function ForgotPassword() {
             >
                 <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter">Forgot your password</h1>
-                        <p className="text-muted-foreground">Enter the email address you'd like your password reset information set to</p>
+                        <h1 className="text-3xl font-bold tracking-tighter">Esqueceu sua senha?</h1>
+                        <p className="text-muted-foreground">Digite o e-mail para o qual deseja receber as instruções de redefinição de senha.</p>
                     </div>
                     <form>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">E-mail</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -41,15 +40,14 @@ export default function ForgotPassword() {
                             />
                         </div>
                         <Button type="submit" className="w-full bg-[#355EAF] mt-8 cursor-pointer">
-                            Request reset link
+                            Solicitar link de redefinição
                         </Button>
                     </form>
                     <div className="text-center text-sm">
-                        <a href="/sign-in" className="text-primary-500 hover:text-primary-600 font-medium">Back To Login</a>
+                        <a href="/sign-in" className="text-primary-500 hover:text-primary-600 font-medium">Voltar para o login</a>
                     </div>
                 </div>
             </motion.div>
-
         </div>
         </div>
     )

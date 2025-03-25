@@ -28,12 +28,12 @@ export default function SignIn() {
             >
                 <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter">Welcome back</h1>
-                        <p className="text-muted-foreground">Enter your credentials to access your account</p>
+                        <h1 className="text-3xl font-bold tracking-tighter">Bem-vindo de volta</h1>
+                        <p className="text-muted-foreground">Insira suas credenciais para acessar sua conta</p>
                     </div>
                     <form className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">E-mail</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -44,7 +44,7 @@ export default function SignIn() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">Senha</Label>
                             <div className="relative">
                                 <Input 
                                     id="password"
@@ -63,19 +63,19 @@ export default function SignIn() {
                             </div>
                         </div>
                         <div className="flex justify-end">
-                            <a href="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">forgot password?</a>
+                            <a href="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">Esqueceu sua senha?</a>
                         </div>
                         <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer">
-                            Sing in
+                            Entrar
                         </Button>
                     </form>
                     <div className="text-center text-sm">
-                        Don't have an account?{" "}
+                        Não tem uma conta?{" "}
                         <a
                             href="/sign-up"
                             className="text-primary-500 hover:text-primary-600 font-medium"
                         >
-                            Sign up
+                            Cadastre-se
                         </a>
                     </div>
                 </div> 
