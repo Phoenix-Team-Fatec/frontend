@@ -13,6 +13,12 @@ export default function SignIn() {
     const [showPassword, setShowPassword] = useState(false)
 
     return (
+
+        <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat" 
+        style={{
+            backgroundImage: "url('/sign.png')", 
+          }}>
+        
         <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
             <motion.div
                 initial={{ opacity: 0, y: -20}}
@@ -74,6 +80,7 @@ export default function SignIn() {
                     </div>
                 </div> 
             </motion.div>
+        </div>
         </div>
     );
 }
