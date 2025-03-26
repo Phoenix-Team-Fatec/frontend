@@ -26,7 +26,7 @@
   }
   
   .stage-card {
-    background: #f4f4f4;
+    background: #ffffff;
     padding: 16px;
     border-radius: 8px;
     width: 250px;
@@ -71,6 +71,7 @@
   }
   
   .add-stage-button {
-    height: 100%;
+    margin-top: 60px;
+    width: 200px;
   }
   

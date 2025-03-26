@@ -66,7 +66,7 @@ const ProjectTasks = () => {
               <h3 className="stage-title">{stage.name}</h3>
 
               {/* 🔹 Botão para adicionar tarefa */}
-              <Button onClick={() => setSelectedStage(stage.id)} className="add-task-button">
+              <Button onClick={() => setSelectedStage(stage.id)} className="add-task-button bg-[#2D57AA] hover:bg-blue-700 text-white">
                 + Adicionar Tarefa
               </Button>
 
@@ -89,7 +89,7 @@ const ProjectTasks = () => {
           <div>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="add-stage-button">+ Adicionar Etapa</Button>
+                <Button className="add-stage-button bg-[#2D57AA] hover:bg-blue-700 text-white">+ Adicionar Etapa</Button>
               </DialogTrigger>
               <DialogContent>
                 <Input
@@ -97,7 +97,7 @@ const ProjectTasks = () => {
                   value={newStage}
                   onChange={(e) => setNewStage(e.target.value)}
                 />
-                <Button onClick={addStage} className="mt-2">
+                <Button onClick={addStage} className="mt-2 bg-[#2D57AA] hover:bg-bleu-700 text-white">
                   Salvar
                 </Button>
               </DialogContent>
@@ -124,7 +124,7 @@ const ProjectTasks = () => {
                 value={newTask.assigned}
                 onChange={(e) => setNewTask({ ...newTask, assigned: e.target.value })}
               />
-              <Button onClick={() => addTask(selectedStage)}>Adicionar</Button>
+              <Button onClick={() => addTask(selectedStage)} className="bg-[#2D57AA] hover:bg-blue-700 text-white">Adicionar</Button>
             </DialogContent>
           </Dialog>
         )}

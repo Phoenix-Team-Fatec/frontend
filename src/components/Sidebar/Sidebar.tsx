@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button"; 
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area"; 
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import Link from "next/link"; // Importe o Link do Next.js
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -52,12 +53,17 @@ const Sidebar = () => {
         {/* Links de Navegação */}
         <ScrollArea className={`w-full ${!isOpen && "hidden"}`}>
           <nav className="flex flex-col gap-4">
-            <Button variant="ghost" className="justify-start">
-              Meus Projetos
-            </Button>
-            <Button variant="ghost" className="justify-start">
-              Minhas Tarefas
-            </Button>
+            <Link href="/dashboard">
+              <Button variant="ghost" className="justify-start">
+                Meus Projetos
+              </Button>
+            </Link>
+            <Link href="/tasks">
+              <Button variant="ghost" className="justify-start">
+                Minhas Tarefas
+              </Button>
+            </Link>
+            
           </nav>
         </ScrollArea>
       </div>
