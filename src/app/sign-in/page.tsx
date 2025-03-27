@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
+import CryptoJS from "crypto-js";
 import axios from "axios";
 
 export default function SignIn() {
@@ -24,6 +25,15 @@ export default function SignIn() {
         try {
             const response = await axios.post("http://localhost:3000/usuarios/login", postData)
             console.log("Login realizado com sucesso", response.data)
+
+            const secretKey = "74b94f6e852f831521bba51e73fe4d5a";
+
+            const encryptedData = CryptoJS.AES.encrypt(
+                JSON.stringify(response.data.user),
+                secretKey
+            ).toString();
+
+            sessionStorage.setItem("userData", encryptedData);
         } catch (error) {
             console.error(error)
             alert("Erro ao fazer login verifique os dados ou tente novamente mais tarde")
