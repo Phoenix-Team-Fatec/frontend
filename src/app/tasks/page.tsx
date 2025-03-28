@@ -1,130 +1,239 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import Sidebar from "@/components/Sidebar/Sidebar"; // 🔹 Importando a Sidebar
-import "./tasks.css"; // 🔹 Importando o CSS
+import Sidebar from "@/components/Sidebar/Sidebar";
+import "./tasks.css";
+import axios from 'axios';
+import { useParams } from "next/navigation";
 
-// 🔹 Dados simulados antes da integração com backend
-const initialStages = [
-  {
-    id: 1,
-    name: "Etapa 1",
-    tasks: [
-      { id: 1, name: "Planejar Reunião", description: "Definir pauta e horários", assigned: "João Silva" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Etapa 2",
-    tasks: [
-      { id: 2, name: "Criar Prototipação", description: "Wireframe no Figma", assigned: "Maria Souza" },
-    ],
-  },
-];
+interface Tarefa {
+  id: number;
+  name: string;
+  description: string;
+}
+
+interface Etapa {
+  etapa_id: number;
+  etapa_nome: string;
+  etapa_descricao?: string;
+  etapa_data_inicio?: string;
+  etapa_data_fim?: string;
+  etapa_status?: boolean;
+  tarefas?: Tarefa[]; // Torna opcional
+  usuarios?: any[];
+  projId: number;
+}
 
 const ProjectTasks = () => {
-  const [stages, setStages] = useState(initialStages);
-  const [newStage, setNewStage] = useState("");
+  // const { proj_id } = useParams();
+  const [stages, setStages] = useState<Etapa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newStage, setNewStage] = useState({
+    nome: "",
+    descricao: "",
+    dataInicio: "",
+    dataFim: "",
+    status: true
+  });
   const [selectedStage, setSelectedStage] = useState<number | null>(null);
-  const [newTask, setNewTask] = useState({ name: "", description: "", assigned: "" });
+  const [newTask, setNewTask] = useState({ name: "", description: "" });
 
-  // 🔹 Função para adicionar nova etapa
-  const addStage = () => {
-    if (newStage.trim() === "") return;
-    setStages([...stages, { id: Date.now(), name: newStage, tasks: [] }]);
-    setNewStage("");
+  useEffect(() => {
+    const fetchStages = async () => {
+      try {
+        const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${1}`);
+        // Garante que cada etapa tenha um array de tarefas
+        const etapasComTarefas = response.data.map(etapa => ({
+          ...etapa,
+          tarefas: etapa.tarefas || []
+        }));
+        setStages(etapasComTarefas);
+      } catch (error) {
+        console.error("Erro ao buscar etapas:", error);
+        setStages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStages();
+  }, []);
+
+  const createStage = async () => {
+    if (!newStage.nome.trim()) return;
+    
+    try {
+      const etapaData = {
+        etapaNome: newStage.nome,
+        etapaDescricao: newStage.descricao,
+        etapaDataInicio: newStage.dataInicio || new Date().toISOString().split('T')[0],
+        etapaDataFim: newStage.dataFim || new Date().toISOString().split('T')[0],
+        etapaStatus: newStage.status,
+        projId: 1
+      };
+
+      const response = await axios.post(`http://localhost:3000/etapas`, etapaData);
+      
+      // Adiciona a nova etapa com array de tarefas vazio
+      setStages(prev => [...prev, { ...response.data, tarefas: [] }]);
+      setNewStage({
+        nome: "",
+        descricao: "",
+        dataInicio: "",
+        dataFim: "",
+        status: true
+      });
+    } catch (error) {
+      console.error("Erro ao criar etapa:", error);
+      alert("Erro ao criar etapa. Verifique os dados e tente novamente.");
+    }
   };
 
-  // 🔹 Função para adicionar nova tarefa
   const addTask = (stageId: number) => {
     if (newTask.name.trim() === "") return;
-    setStages(
-      stages.map((stage) =>
-        stage.id === stageId
-          ? { ...stage, tasks: [...stage.tasks, { id: Date.now(), ...newTask }] }
+    
+    setStages(prevStages =>
+      prevStages.map(stage =>
+        stage.etapa_id === stageId
+          ? {
+              ...stage,
+              tarefas: [
+                ...(stage.tarefas || []), // Garante que tarefas existe
+                { id: Date.now(), ...newTask }
+              ]
+            }
           : stage
       )
     );
-    setNewTask({ name: "", description: "", assigned: "" });
+    setNewTask({ name: "", description: "" });
+    setSelectedStage(null);
   };
+
+  if (loading) {
+    return <div className="loading">Carregando etapas...</div>;
+  }
 
   return (
     <div className="tasks-container">
-      <Sidebar /> {/* 🔹 Sidebar fixa no lado esquerdo */}
+      <Sidebar />
 
       <div className="tasks-content">
-        <h2 className="tasks-title">Projeto Teste</h2>
+        <h2 className="tasks-title">Etapas do Projeto</h2>
 
-        {/* 🔹 Lista de Etapas */}
         <div className="tasks-stages">
-          {stages.map((stage) => (
-            <div key={stage.id} className="stage-card">
-              <h3 className="stage-title">{stage.name}</h3>
+          {stages.length > 0 ? (
+            stages.map((stage) => (
+              <div key={stage.etapa_id} className="stage-card">
+                <h3 className="stage-title">{stage.etapa_nome}</h3>
+                {stage.etapa_descricao && <p className="stage-description">{stage.etapa_descricao}</p>}
 
-              {/* 🔹 Botão para adicionar tarefa */}
-              <Button onClick={() => setSelectedStage(stage.id)} className="add-task-button bg-[#2D57AA] hover:bg-blue-700 text-white">
-                + Adicionar Tarefa
-              </Button>
-
-              {/* 🔹 Lista de Tarefas */}
-              <div className="tasks-list">
-                {stage.tasks.map((task) => (
-                  <Card key={task.id} className="task-card">
-                    <CardContent className="task-content">
-                      <p className="task-name">{task.name}</p>
-                      <p className="task-description">{task.description}</p>
-                      <p className="task-assigned">{task.assigned}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {/* 🔹 Botão para adicionar nova etapa */}
-          <div>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button className="add-stage-button bg-[#2D57AA] hover:bg-blue-700 text-white">+ Adicionar Etapa</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <Input
-                  placeholder="Nome da etapa"
-                  value={newStage}
-                  onChange={(e) => setNewStage(e.target.value)}
-                />
-                <Button onClick={addStage} className="mt-2 bg-[#2D57AA] hover:bg-bleu-700 text-white">
-                  Salvar
+                <Button 
+                  onClick={() => setSelectedStage(stage.etapa_id)} 
+                  className="add-task-button"
+                >
+                  + Adicionar Tarefa
                 </Button>
-              </DialogContent>
-            </Dialog>
-          </div>
+
+                <div className="tasks-list">
+                  {(stage.tarefas || []).map((task) => ( // Garante que tarefas existe
+                    <Card key={task.id} className="task-card">
+                      <CardContent className="task-content">
+                        <p className="task-name">{task.name}</p>
+                        <p className="task-description">{task.description}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="no-stages">
+              <p>Nenhuma etapa criada ainda.</p>
+            </div>
+          )}
+
+          {/* Modal para criar nova etapa */}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="add-stage-button">
+                + Criar Nova Etapa
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Criar Nova Etapa</DialogTitle>
+              </DialogHeader>
+              
+              <Input
+                placeholder="Nome da etapa*"
+                value={newStage.nome}
+                onChange={(e) => setNewStage({...newStage, nome: e.target.value})}
+                required
+              />
+              
+              <Input
+                placeholder="Descrição"
+                value={newStage.descricao}
+                onChange={(e) => setNewStage({...newStage, descricao: e.target.value})}
+              />
+              
+              <div className="date-inputs">
+                <Input
+                  type="date"
+                  label="Data de Início"
+                  value={newStage.dataInicio}
+                  onChange={(e) => setNewStage({...newStage, dataInicio: e.target.value})}
+                />
+                
+                <Input
+                  type="date"
+                  label="Data de Término"
+                  value={newStage.dataFim}
+                  onChange={(e) => setNewStage({...newStage, dataFim: e.target.value})}
+                />
+              </div>
+              
+              <Button 
+                onClick={createStage}
+                disabled={!newStage.nome.trim()}
+              >
+                Criar Etapa
+              </Button>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        {/* 🔹 Modal para adicionar nova tarefa */}
+        {/* Modal para adicionar tarefa */}
         {selectedStage && (
           <Dialog open={!!selectedStage} onOpenChange={() => setSelectedStage(null)}>
             <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
+              </DialogHeader>
+              
               <Input
-                placeholder="Nome da tarefa"
+                placeholder="Nome da tarefa*"
                 value={newTask.name}
-                onChange={(e) => setNewTask({ ...newTask, name: e.target.value })}
+                onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+                required
               />
+              
               <Input
                 placeholder="Descrição"
                 value={newTask.description}
-                onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
               />
-              <Input
-                placeholder="Responsável"
-                value={newTask.assigned}
-                onChange={(e) => setNewTask({ ...newTask, assigned: e.target.value })}
-              />
-              <Button onClick={() => addTask(selectedStage)} className="bg-[#2D57AA] hover:bg-blue-700 text-white">Adicionar</Button>
+              
+              <Button 
+                onClick={() => addTask(selectedStage)}
+                disabled={!newTask.name.trim()}
+              >
+                Adicionar Tarefa
+              </Button>
             </DialogContent>
           </Dialog>
         )}

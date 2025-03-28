@@ -63,7 +63,7 @@ export default function ProjectRegistration({
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
 
-          <div>
+          {/* <div>
             <label className="modal-label">Responsáveis</label>
             <select multiple value={responsibles} onChange={handleResponsibleChange} className="dropdown">
               {availableUsers.map((user) => (
@@ -72,12 +72,12 @@ export default function ProjectRegistration({
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
 
-          <div>
+          {/* <div>
             <label className="modal-label">Área de atuação</label>
             <Input value={area} onChange={(e) => setArea(e.target.value)} required />
-          </div>
+          </div> */}
 
           <div>
             <label className="modal-label">Descrição</label>
