@@ -11,9 +11,12 @@ import axios from 'axios';
 import { useParams } from "next/navigation";
 
 interface Tarefa {
-  id: number;
-  name: string;
-  description: string;
+  tarefa_id: number;
+  tarefa_nome: string;
+  tarefa_descricao: string;
+  tarefa_data_inicio: string;
+  tarefa_data_fim: string;
+  tarefa_status: boolean;
 }
 
 interface Etapa {
@@ -23,7 +26,7 @@ interface Etapa {
   etapa_data_inicio?: string;
   etapa_data_fim?: string;
   etapa_status?: boolean;
-  tarefas?: Tarefa[]; // Torna opcional
+  tarefas?: Tarefa[];
   usuarios?: any[];
   projId: number;
 }
@@ -40,13 +43,18 @@ const ProjectTasks = () => {
     status: true
   });
   const [selectedStage, setSelectedStage] = useState<number | null>(null);
-  const [newTask, setNewTask] = useState({ name: "", description: "" });
+  const [newTask, setNewTask] = useState({
+    nome: "",
+    descricao: "",
+    data_inicio: new Date().toISOString().split('T')[0],
+    data_fim: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    tarefa_status: false
+  });
 
   useEffect(() => {
     const fetchStages = async () => {
       try {
         const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${1}`);
-        // Garante que cada etapa tenha um array de tarefas
         const etapasComTarefas = response.data.map(etapa => ({
           ...etapa,
           tarefas: etapa.tarefas || []
@@ -78,7 +86,6 @@ const ProjectTasks = () => {
 
       const response = await axios.post(`http://localhost:3000/etapas`, etapaData);
       
-      // Adiciona a nova etapa com array de tarefas vazio
       setStages(prev => [...prev, { ...response.data, tarefas: [] }]);
       setNewStage({
         nome: "",
@@ -93,24 +100,45 @@ const ProjectTasks = () => {
     }
   };
 
-  const addTask = (stageId: number) => {
-    if (newTask.name.trim() === "") return;
+  const addTask = async (etapaId: number) => {
+    if (!newTask.nome.trim()) return;
     
-    setStages(prevStages =>
-      prevStages.map(stage =>
-        stage.etapa_id === stageId
-          ? {
-              ...stage,
-              tarefas: [
-                ...(stage.tarefas || []), // Garante que tarefas existe
-                { id: Date.now(), ...newTask }
-              ]
-            }
-          : stage
-      )
-    );
-    setNewTask({ name: "", description: "" });
-    setSelectedStage(null);
+    try {
+      const response = await axios.post(`http://localhost:3000/tarefa`, {
+        ...newTask,
+        etapa_id: etapaId
+      });
+
+      setStages(prevStages =>
+        prevStages.map(stage =>
+          stage.etapa_id === etapaId
+            ? {
+                ...stage,
+                tarefas: [
+                  ...(stage.tarefas || []),
+                  response.data
+                ]
+              }
+            : stage
+        )
+      );
+
+      setNewTask({
+        nome: "",
+        descricao: "",
+        data_inicio: new Date().toISOString().split('T')[0],
+        data_fim: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        tarefa_status: false
+      });
+      setSelectedStage(null);
+    } catch (error) {
+      console.error("Erro ao criar tarefa:", error);
+      alert(
+        axios.isAxiosError(error) 
+          ? error.response?.data?.message || "Erro ao criar tarefa"
+          : "Erro desconhecido"
+      );
+    }
   };
 
   if (loading) {
@@ -120,7 +148,6 @@ const ProjectTasks = () => {
   return (
     <div className="tasks-container">
       <Sidebar />
-
       <div className="tasks-content">
         <h2 className="tasks-title">Etapas do Projeto</h2>
 
@@ -139,11 +166,18 @@ const ProjectTasks = () => {
                 </Button>
 
                 <div className="tasks-list">
-                  {(stage.tarefas || []).map((task) => ( // Garante que tarefas existe
-                    <Card key={task.id} className="task-card">
+                  {(stage.tarefas || []).map((task) => (
+                    <Card key={task.tarefa_id} className="task-card">
                       <CardContent className="task-content">
-                        <p className="task-name">{task.name}</p>
-                        <p className="task-description">{task.description}</p>
+                        <p className="task-name">{task.tarefa_nome}</p>
+                        <p className="task-description">{task.tarefa_descricao}</p>
+                        <div className="task-dates">
+                          <span>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</span>
+                          <span>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</span>
+                        </div>
+                        <div className="task-status">
+                          Status: {task.tarefa_status ? "Concluída" : "Pendente"}
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -156,7 +190,6 @@ const ProjectTasks = () => {
             </div>
           )}
 
-          {/* Modal para criar nova etapa */}
           <Dialog>
             <DialogTrigger asChild>
               <Button className="add-stage-button">
@@ -207,7 +240,6 @@ const ProjectTasks = () => {
           </Dialog>
         </div>
 
-        {/* Modal para adicionar tarefa */}
         {selectedStage && (
           <Dialog open={!!selectedStage} onOpenChange={() => setSelectedStage(null)}>
             <DialogContent>
@@ -217,20 +249,36 @@ const ProjectTasks = () => {
               
               <Input
                 placeholder="Nome da tarefa*"
-                value={newTask.name}
-                onChange={(e) => setNewTask({...newTask, name: e.target.value})}
+                value={newTask.nome}
+                onChange={(e) => setNewTask({...newTask, nome: e.target.value})}
                 required
               />
               
               <Input
                 placeholder="Descrição"
-                value={newTask.description}
-                onChange={(e) => setNewTask({...newTask, description: e.target.value})}
+                value={newTask.descricao}
+                onChange={(e) => setNewTask({...newTask, descricao: e.target.value})}
               />
+              
+              <div className="date-inputs">
+                <Input
+                  type="date"
+                  label="Data de Início"
+                  value={newTask.data_inicio.split('T')[0]}
+                  onChange={(e) => setNewTask({...newTask, data_inicio: e.target.value})}
+                />
+                
+                <Input
+                  type="date"
+                  label="Data de Término"
+                  value={newTask.data_fim.split('T')[0]}
+                  onChange={(e) => setNewTask({...newTask,data_fim: e.target.value})}
+                />
+              </div>
               
               <Button 
                 onClick={() => addTask(selectedStage)}
-                disabled={!newTask.name.trim()}
+                disabled={!newTask.nome.trim()}
               >
                 Adicionar Tarefa
               </Button>

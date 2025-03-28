@@ -122,3 +122,26 @@
 .add-stage-button:hover {
   background-color: #003366;
 }
+
+
+.task-dates {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.task-status {
+  margin-top: 0.5rem;
+  font-weight: bold;
+  color: var(--status-color);
+}
+
+.task-status[data-status="true"] {
+  --status-color: green;
+}
+
+.task-status[data-status="false"] {
+  --status-color: orange;
+}
