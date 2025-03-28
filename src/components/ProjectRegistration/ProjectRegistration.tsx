@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import "./ProjectRegistration.css"; // Importa o arquivo CSS separado
+import axios from "axios";
 
 export default function ProjectRegistration({
   open, 
@@ -20,15 +21,22 @@ export default function ProjectRegistration({
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
   const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);
+  const [endDate, setEndDate] = useState("")
 
   useEffect(() => {
     const fetchUsers = async () => {
-      const simulatedData = [
-        { id: "1", name: "Gustavo" },
-        { id: "2", name: "Samuel" },
-        { id: "3", name: "Matheuz" },
-      ];
-      setAvailableUsers(simulatedData);
+      try {
+        const { data } = await axios.get("http://localhost:3000/usuarios");
+
+        const formattedUsuario = data.map((user: any) => ({
+          id: user.user_id.toString(),
+          name: `${user.user_nome} ${user.user_sobrenome ?? ""}`.trim(),
+        }));
+
+        setAvailableUsers(formattedUsuario);
+      } catch (error) {
+        console.error("Erro ao carregar usuários", error);
+      }
     };
     fetchUsers();
   }, []);
@@ -82,6 +90,11 @@ export default function ProjectRegistration({
           <div>
             <label className="modal-label">Descrição</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
+          </div>
+
+          <div>
+            <label className="modal-label">Data fim do projeto (dd/mm/yyyy)</label>
+            <Textarea value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
           </div>
 
           <DialogFooter className="modal-footer">
