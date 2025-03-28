@@ -8,11 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import CryptoJS from "crypto-js";
 import axios from "axios";
+import { useRouter } from 'next/navigation';
+
+
 
 export default function SignIn() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
+    const router = useRouter()
 
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -34,6 +38,8 @@ export default function SignIn() {
             ).toString();
 
             sessionStorage.setItem("userData", encryptedData);
+
+            router.push('/dashboard');
         } catch (error) {
             console.error(error)
             alert("Erro ao fazer login verifique os dados ou tente novamente mais tarde")
