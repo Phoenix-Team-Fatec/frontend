@@ -2,23 +2,28 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import CardItem from "@/components/Cards_Projects/Cards_Projects";
-import { Plus } from "lucide-react"; // Ícone de "+"
+import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ProjectRegistration from "@/components/ProjectRegistration/ProjectRegistration";
+import Link from "next/link";
+import Cards_Projects from "@/components/Cards_Projects/Cards_Projects";
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<any[]>([]); // Array para armazenar os projetos com seus dados
+  const [projects, setProjects] = useState<any[]>([]);
   const [imageVisible, setImageVisible] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar o modal de cadastro
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const addCard = () => {
-    setIsModalOpen(true); // Abre o modal de cadastro de projeto
+    setIsModalOpen(true);
   };
 
   const handleProjectCreation = (newProjectData: any) => {
-    setProjects([...projects, newProjectData]); // Adiciona o novo projeto com dados ao array
-    setImageVisible(false); // Quando o card for adicionado, esconder a imagem
+    setProjects([...projects, newProjectData]);
+    setImageVisible(false);
+  };
+
+  const handleDelete = (id: number) => {
+    setProjects(projects.filter((_, index) => index !== id));
   };
 
   return (
@@ -41,11 +46,27 @@ export default function Dashboard() {
         {/* Cards */}
         <div className="flex flex-wrap gap-2">
           {projects.map((project, index) => (
-            <CardItem key={index} projectData={project} />
+            <div key={index} className="relative w-full">
+              <Cards_Projects
+                id={index}
+                title={
+                  <Link href="/tasks" className="text-blue-600 hover:underline">
+                    {project.title}
+                  </Link>
+                }
+                description={project.description}
+                startDate={project.startDate}
+                endDate={project.endDate}
+                progress={project.progress}
+                users={project.users}
+                onDelete={() => handleDelete(index)}
+                fetchProjectData={() => {}}
+              />
+            </div>
           ))}
         </div>
 
-        {/* Botão flutuante no canto inferior esquerdo */}
+        {/* Botão flutuante no canto inferior direito */}
         <Button
           onClick={addCard}
           className="fixed bottom-4 right-4 w-[70px] h-[70px] rounded-full bg-[#2D57AA] text-white flex items-center justify-center shadow-lg hover:bg-blue-700"
