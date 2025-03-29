@@ -47,21 +47,20 @@ export default function SignIn() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
+
+    <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat" 
+        style={{
+            backgroundImage: "url('/sign.png')", 
+          }}>
+
                 <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter">Welcome back</h1>
-                        <p className="text-muted-foreground">Enter your credentials to access your account</p>
+                        <h1 className="text-3xl font-bold tracking-tighter">Bem-vindo de volta</h1>
+                        <p className="text-muted-foreground">Insira suas credenciais para acessar sua conta</p>
                     </div>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">E-mail</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -72,42 +71,41 @@ export default function SignIn() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">Senha</Label>
                             <div className="relative">
-                                <Input
+                                <Input 
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
-                                <button
+                                <button 
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                                >
-                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
                         </div>
                         <div className="flex justify-end">
-                            <a href="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">forgot password?</a>
+                            <a href="/forgot-password" className="text-sm text-primary-500 hover:text-primary-600">Esqueceu sua senha?</a>
                         </div>
-                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer hover:bg-[#2A52A2]">
-                            Sing in
+                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer">
+                            Entrar
                         </Button>
                     </form>
                     <div className="text-center text-sm">
-                        Don't have an account?{" "}
+                        Não tem uma conta?{" "}
                         <a
                             href="/sign-up"
                             className="text-primary-500 hover:text-primary-600 font-medium"
                         >
-                            Sign up
+                            Cadastre-se
                         </a>
                     </div>
-                </div>
-            </motion.div>
+                </div> 
         </div>
     );
 }
