@@ -91,11 +91,11 @@ export default function ProjectRegistration({
             <label className="modal-label">Descrição</label>
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
           </div>
-
+{/* 
           <div>
             <label className="modal-label">Data fim do projeto (dd/mm/yyyy)</label>
-            <Textarea value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
-          </div>
+            <Textarea value={endDate} onChange={(e) => setEndDate(e.target.value)}  />
+          </div> */}
 
           <DialogFooter className="modal-footer">
             <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
