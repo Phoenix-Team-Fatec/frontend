@@ -58,11 +58,11 @@ const Sidebar = () => {
                 Meus Projetos
               </Button>
             </Link>
-            <Link href="/tasks">
+            {/* <Link href="/tasks">
               <Button variant="ghost" className="justify-start">
                 Minhas Tarefas
               </Button>
-            </Link>
+            </Link> */}
             
           </nav>
         </ScrollArea>

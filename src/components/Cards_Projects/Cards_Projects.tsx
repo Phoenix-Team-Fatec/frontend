@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 interface CardProps {
   id: number;
-  title: string;
+  projeto_proj_nome: string;
   description: string;
   startDate: string;
   endDate: string;
@@ -20,7 +20,7 @@ interface CardProps {
 
 export default function Cards_Projects({
   id,
-  title,
+  projeto_proj_nome,
   description,
   startDate,
   endDate,
@@ -32,7 +32,7 @@ export default function Cards_Projects({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [projectData, setProjectData] = useState({
-    title,
+    projeto_proj_nome,
     description,
     startDate,
     endDate,
@@ -80,7 +80,7 @@ export default function Cards_Projects({
         </div>
 
         <CardContent className="p-0">
-          <h2 className="text-sm font-bold text-gray-900">{projectData.title}</h2>
+          <h2 className="text-sm font-bold text-gray-900">{projectData.projeto_proj_nome}</h2>
           <p className="text-xs text-gray-500">{projectData.description}</p>
 
           {/* Verificar se users não está vazio ou indefinido */}
@@ -119,7 +119,7 @@ export default function Cards_Projects({
           <input
             type="text"
             name="title"
-            value={projectData.title}
+            value={projectData.projeto_proj_nome}
             onChange={handleChange}
             className="w-full border p-2 rounded-md text-lg font-bold"
           />

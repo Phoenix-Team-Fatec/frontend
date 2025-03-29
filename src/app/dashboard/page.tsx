@@ -119,17 +119,17 @@ export default function Dashboard() {
           <div key={index} className="w-full max-w-[220px]">
             <Cards_Projects
               id={index}
-              title={
+              projeto_proj_nome={
                 <Link 
-                  href="/tasks" 
-                  className="text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
-                >
-                  {project.title}
+                    href={`/tasks?projectId=${project.projeto_proj_id}`}
+                    className="text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
+                  >
+                    {project.projeto_proj_nome}
                 </Link>
               }
-              description={project.description}
-              startDate={project.startDate}
-              progress={project.progress}
+              description={project.projeto_proj_descricao}
+              startDate={project.projeto_proj_data_inicio}
+              progress={project.projeto_proj_status}
               users={project.users}
               onDelete={() => handleDelete(project.proj_id)}
               fetchProjectData={() => {}}

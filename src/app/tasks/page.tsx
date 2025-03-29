@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import "./tasks.css";
 import axios from 'axios';
-import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 interface Tarefa {
   tarefa_id: number;
@@ -32,7 +32,8 @@ interface Etapa {
 }
 
 const ProjectTasks = () => {
-  // const { proj_id } = useParams();
+  const searchParams = useSearchParams();
+  const proj_id = searchParams.get('projectId');
   const [stages, setStages] = useState<Etapa[]>([]);
   const [loading, setLoading] = useState(true);
   const [newStage, setNewStage] = useState({
@@ -54,7 +55,7 @@ const ProjectTasks = () => {
   useEffect(() => {
     const fetchStages = async () => {
       try {
-        const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${1}`);
+        const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${Number(proj_id)}`);
         const etapasComTarefas = response.data.map(etapa => ({
           ...etapa,
           tarefas: etapa.tarefas || []
@@ -69,7 +70,7 @@ const ProjectTasks = () => {
     };
 
     fetchStages();
-  }, []);
+  }, [proj_id]);
 
   const createStage = async () => {
     if (!newStage.nome.trim()) return;
@@ -81,7 +82,7 @@ const ProjectTasks = () => {
         etapaDataInicio: newStage.dataInicio || new Date().toISOString().split('T')[0],
         etapaDataFim: newStage.dataFim || new Date().toISOString().split('T')[0],
         etapaStatus: newStage.status,
-        projId: 1
+        projId: Number(proj_id)
       };
 
       const response = await axios.post(`http://localhost:3000/etapas`, etapaData);
