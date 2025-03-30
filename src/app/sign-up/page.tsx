@@ -124,36 +124,33 @@ export default function SignUp() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-                <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat"
+            style={{
+                backgroundImage: "url('/sign.png')", 
+            }}>
+                <div className="bg-white rounded-xl shadow-xl p-12 space-y-6 w-120">
                     <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter">Welcome to Lumen</h1>
+                        <h1 className="text-3xl font-bold tracking-tighter">Bem-vindo ao Lumen!</h1>
                     </div>
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         <div className="flex space-x-3">
                             <div className="space-y-2">
-                                <Label htmlFor="firstName">First Name</Label>
+                                <Label htmlFor="firstName">Nome</Label>
                                 <Input
                                     id="firstName"
                                     type="text"
-                                    placeholder="Enter your first name"
+                                    placeholder="Digite seu nome"
                                     value={firstName}
                                     onChange={(e) => setFirstName(e.target.value)}
                                     required
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="lastName">Last Name</Label>
+                                <Label htmlFor="lastName">Sobrenome</Label>
                                 <Input
                                     id="lastName"
                                     type="text"
-                                    placeholder="Enter your last name"
+                                    placeholder="Digite seu sobrenome"
                                     value={lastName}
                                     onChange={(e) => setLastName(e.target.value)}
                                     required
@@ -161,7 +158,7 @@ export default function SignUp() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">E-mail</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -172,7 +169,7 @@ export default function SignUp() {
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password">Senha</Label>
                             <div className="relative">
                                 <Input
                                     id="password"
@@ -191,7 +188,7 @@ export default function SignUp() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="photo">Upload Photo</Label>
+                            <Label htmlFor="photo">Foto de Perfil</Label>
                             <div className="relative">
                                 <Upload className="absolute left-2 top-1/2 transform -translate-y-1/2" size={20} />
                                 <Input
@@ -219,30 +216,29 @@ export default function SignUp() {
                                 </div>
                                 <div className="flex mt-2 justify-center space-x-2">
                                     <Button type="button" className="bg-green-500 w-1/2" onClick={handleCropSave}>
-                                        Apply
+                                        Salvar
                                     </Button>
                                     <Button type="button" className="bg-red-500 w-1/2" onClick={() => setShowCropper(false)}>
-                                        Cancel
+                                        Fechar
                                     </Button>
                                 </div>
                             </div>
                         )}
 
-                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer hover:bg-[#2A52A2]">
-                            Sign Up
+                        <Button type="submit" className="w-full bg-[#355EAF] cursor-pointer hover:bg-[#2d4f95]">
+                            Cadastra-se
                         </Button>
                     </form>
                     <div className="text-center text-sm">
-                        Already have an account?{" "}
+                        Já tem uma conta?{" "}
                         <a
                             href="/sign-in"
-                            className="text-primary-500 hover:text-primary-600 font-medium"
+                            className="text-primary-500 hover:text-primary-600 font-medium hover:underline"
                         >
-                            Sign in
+                            Entrar
                         </a>
                     </div>
                 </div>
-            </motion.div>
         </div>
     );
 }

@@ -17,7 +17,7 @@ export default function ProjectRegistration({
   onProjectCreated: (newProjectData: any) => void; // Função para notificar a criação do projeto com dados
 }) {
   const [title, setTitle] = useState("");
-  const [responsibles, setResponsibles] = useState<string[]>([]);
+  const [responsibles, setResponsibles] = useState<string[]>([]); 
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
   const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);

@@ -14,14 +14,14 @@ const Sidebar = () => {
       initial={{ width: 80 }}
       animate={{ width: isOpen ? 250 : 80 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-0 top-[20px] bottom-[20px] h-[calc(100%-40px)] bg-[#2D57AA] text-white shadow-lg flex flex-col justify-between p-4 rounded-r-2xl"
+      className="fixed left-0 top-[20px] bottom-[20px] h-[calc(100%-40px)] bg-[#355EAF] text-white shadow-lg flex flex-col justify-between p-4 rounded-r-2xl"
     >
       {/* Botão de Expandir/Retrair */}
       {!isOpen && (
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-[0px] top-5 bg-[#2D57AA] text-white p-1 px-2 rounded-r-lg"
+          className="absolute right-[0px] top-5 bg-[#355EAF] text-white p-1 px-2 rounded-r-lg"
           onClick={() => setIsOpen(true)}
         >
           <ChevronRight />
