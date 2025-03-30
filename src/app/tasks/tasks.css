@@ -3,7 +3,7 @@
   display: flex;
   height: 100vh;
   padding-left: 70px; /* 🔹 Espaço para a Sidebar */
-  background-color: #f0f7ff; /* 🔹 Azul claro de fundo */
+  background-color: #ffffff; /* 🔹 Azul claro de fundo */
 }
 
 /* 🔹 Conteúdo principal */
@@ -34,9 +34,7 @@
   background: #ffffff;
   padding: 16px;
   border-radius: 10px;
-  width: 270px;
-  box-shadow: 0 4px 8px rgba(0, 0, 102, 0.2); /* 🔹 Sombra azul */
-  border-left: 6px solid #0056b3; /* 🔹 Destaque na lateral */
+  width: 300px; 
 }
 
 /* 🔹 Título da etapa */
@@ -108,8 +106,8 @@
 
 /* 🔹 Botão para adicionar etapa */
 .add-stage-button {
-  margin-top: 60px;
-  width: 200px;
+  margin-top: 87px;
+  width: 250px;
   background-color: #0056b3;
   color: white;
   padding: 10px;
