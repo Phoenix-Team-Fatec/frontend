@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import "./ProjectRegistration.css"; // Importa o arquivo CSS separado
 import axios from "axios";
+import { Label } from "../ui/label";
 
 export default function ProjectRegistration({
   open, 
@@ -59,50 +59,82 @@ export default function ProjectRegistration({
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="modal-container">
-        <DialogHeader>
-          <DialogTitle className="modal-title">Cadastro de projeto</DialogTitle>
-        </DialogHeader>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+          <DialogHeader>
+            <DialogTitle className="text-3xl font-bold tracking-tighter text-center space-y-2">Cadastro de projeto</DialogTitle>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div>
-            <label className="modal-label">Título</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Título</Label>
+                <Input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                />
+            </div>
 
-          {/* <div>
-            <label className="modal-label">Responsáveis</label>
-            <select multiple value={responsibles} onChange={handleResponsibleChange} className="dropdown">
-              {availableUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.name}
-                </option>
-              ))}
-            </select>
-          </div> */}
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700">Responsáveis</label>
+              <select
+                multiple
+                value={responsibles}
+                onChange={handleResponsibleChange}
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {availableUsers.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
+                ))}
+              </select>
+            </div> */}
 
-          {/* <div>
-            <label className="modal-label">Área de atuação</label>
-            <Input value={area} onChange={(e) => setArea(e.target.value)} required />
-          </div> */}
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
+              <Input
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                required
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div> */}
 
-          <div>
-            <label className="modal-label">Descrição</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} required />
-          </div>
-{/* 
-          <div>
-            <label className="modal-label">Data fim do projeto (dd/mm/yyyy)</label>
-            <Textarea value={endDate} onChange={(e) => setEndDate(e.target.value)}  />
-          </div> */}
+            <div className="space-y-2">
+              <Label htmlFor="description">Descrição</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+              />
+            </div>
 
-          <DialogFooter className="modal-footer">
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button type="submit" className="submit-button">Cadastrar projeto</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700">Data fim do projeto (dd/mm/yyyy)</label>
+              <Textarea
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div> */}
+            <div className="flex justify-center space-x-2 w-full">
+              <Button
+                onClick={() => setOpen(false)}
+                variant="outline"
+                className="flex-1 text-[#355EAF] border border-[#355EAF] hover:text-[#2d4f95] cursor-pointer"
+                >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] cursor-pointer"
+              >
+                Cadastrar projeto
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
   );
 }

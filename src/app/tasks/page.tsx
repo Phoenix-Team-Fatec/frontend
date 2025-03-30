@@ -197,13 +197,13 @@ const ProjectTasks = () => {
                 + Criar Nova Etapa
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
               <DialogHeader>
-                <DialogTitle>Criar Nova Etapa</DialogTitle>
+                <DialogTitle className="text-3xl font-bold tracking-tighter text-center space-y-2">Criar Nova Etapa</DialogTitle>
               </DialogHeader>
               
               <Input
-                placeholder="Nome da etapa*"
+                placeholder="Nome da etapa"
                 value={newStage.nome}
                 onChange={(e) => setNewStage({...newStage, nome: e.target.value})}
                 required
@@ -215,7 +215,7 @@ const ProjectTasks = () => {
                 onChange={(e) => setNewStage({...newStage, descricao: e.target.value})}
               />
               
-              <div className="date-inputs">
+              <div className="space-y-2">
                 <Input
                   type="date"
                   label="Data de Início"
@@ -234,6 +234,7 @@ const ProjectTasks = () => {
               <Button 
                 onClick={createStage}
                 disabled={!newStage.nome.trim()}
+                className="cursor-pointer bg-[#355EAF] hover:bg-[#2d4f95]"
               >
                 Criar Etapa
               </Button>
