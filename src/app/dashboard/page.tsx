@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userId, setUserId] = useState(3);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -74,10 +75,12 @@ export default function Dashboard() {
     console.log(projects);
   }, [projects]);
 
+  const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
+
   return (
     <div className="flex">
-      <Sidebar />
-      <div className="p-8 w-full">
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <div className="{className={`p-8 w-full transition-all duration-300 ${contentMargin}`}">
       {imageVisible && (
         <div className="flex flex-col justify-center items-center h-full min-h-[85vh]">
           <img

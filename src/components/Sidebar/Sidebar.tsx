@@ -1,23 +1,30 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link"; // Importe o Link do Next.js
+import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Dispatch, SetStateAction } from "react";
 
+interface SidebarProps {
+  isOpen: boolean;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+}
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const pathname = usePathname();
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
 
   return (
     <motion.aside
       initial={{ width: 80 }}
       animate={{ width: isOpen ? 250 : 80 }}
       transition={{ duration: 0.3 }}
-      className="fixed left-0 top-[20px] bottom-[20px] h-[calc(100%-40px)] bg-[#355EAF] text-white shadow-lg flex flex-col justify-between p-4 rounded-r-2xl"
+      className="fixed left-0 top-[20px] bottom-[20px] h-[calc(100%-40px)] bg-[#355EAF] text-white shadow-lg flex flex-col justify-between p-4 rounded-r-2xl z-10"
     >
       {/* Botão de Expandir/Retrair */}
       {!isOpen && (
@@ -25,7 +32,7 @@ const Sidebar = () => {
           variant="ghost"
           size="icon"
           className="absolute right-[0px] top-5 bg-[#355EAF] text-white p-1 px-2 rounded-r-lg cursor-pointer hover:bg-transparent hover:text-[#C5D8FF]"
-          onClick={() => setIsOpen(true)}
+          onClick={toggleSidebar}
         >
           <ChevronRight />
         </Button>
@@ -36,7 +43,7 @@ const Sidebar = () => {
           variant="ghost"
           size="icon"
           className="absolute right-2 top-5 text-white text-2xl cursor-pointer hover:bg-transparent hover:text-[#C5D8FF]"
-          onClick={() => setIsOpen(false)}
+          onClick={toggleSidebar}
         >
           <ChevronLeft />
         </Button>
@@ -56,25 +63,26 @@ const Sidebar = () => {
         {/* Links de Navegação */}
         <ScrollArea className={`w-full ${!isOpen && "hidden"}`}>
           <nav className="flex flex-col justify-center items-center gap-4">
-          <Link href="/dashboard">
-            <Button
-              variant="ghost"
-              className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
-                pathname === "/dashboard" ? "text-[#C5D8FF] font-bold" : "text-white"
-              }`}
-            >
-              Meus Projetos
-            </Button>
-          </Link>
-             <Link href="/tasks">
-              <Button variant="ghost"
-              className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
-              pathname === "/tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
-              }`}
+            <Link href="/dashboard">
+              <Button
+                variant="ghost"
+                className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
+                  pathname === "/dashboard" ? "text-[#C5D8FF] font-bold" : "text-white"
+                }`}
+              >
+                Meus Projetos
+              </Button>
+            </Link>
+            <Link href="/tasks">
+              <Button 
+                variant="ghost"
+                className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
+                  pathname === "/tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
+                }`}
               >
                 Minhas Tarefas
               </Button>
-          </Link> 
+            </Link> 
           </nav>
         </ScrollArea>
       </div>

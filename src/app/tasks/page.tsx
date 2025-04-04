@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import "./tasks.css";
 import axios from 'axios';
 import { useSearchParams } from "next/navigation";
 
@@ -36,6 +35,7 @@ const ProjectTasks = () => {
   const proj_id = searchParams.get('projectId');
   const [stages, setStages] = useState<Etapa[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newStage, setNewStage] = useState({
     nome: "",
     descricao: "",
@@ -142,148 +142,239 @@ const ProjectTasks = () => {
     }
   };
 
+  // Calculate content margin based on sidebar state
+  const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
+
   if (loading) {
-    return <div className="loading">Carregando etapas...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen font-medium text-lg text-gray-600">
+        Carregando etapas...
+      </div>
+    );
   }
 
   return (
-    <div className="tasks-container">
-      <Sidebar />
-      <div className="tasks-content">
-        <h2 className="tasks-title">Etapas do Projeto</h2>
+    <div className="flex min-h-screen">
+      <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <div className={`w-full p-8 transition-all duration-300 ${contentMargin}`}>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Etapas do Projeto</h2>
 
-        <div className="tasks-stages">
-          {stages.length > 0 ? (
-            stages.map((stage) => (
-              <div key={stage.etapa_id} className="stage-card">
-                <h3 className="stage-title">{stage.etapa_nome}</h3>
-                {stage.etapa_descricao && <p className="stage-description">{stage.etapa_descricao}</p>}
+        {stages.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+            {stages.map((stage) => (
+              <div key={stage.etapa_id} className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">
+                <h3 className="text-xl font-semibold text-[#355EAF] mb-3">{stage.etapa_nome}</h3>
+                {stage.etapa_descricao && (
+                  <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
+                )}
 
                 <Button 
                   onClick={() => setSelectedStage(stage.etapa_id)} 
-                  className="add-task-button"
+                  className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4 cursor-pointer"
                 >
                   + Adicionar Tarefa
                 </Button>
 
-                <div className="tasks-list">
+                <div className="space-y-3 flex-grow overflow-y-auto max-h-[50vh]">
                   {(stage.tarefas || []).map((task) => (
-                    <Card key={task.tarefa_id} className="task-card">
-                      <CardContent className="task-content">
-                        <p className="task-name">{task.tarefa_nome}</p>
-                        <p className="task-description">{task.tarefa_descricao}</p>
-                        <div className="task-dates">
-                          <span>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</span>
-                          <span>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</span>
+                    <Card key={task.tarefa_id} className="border border-gray-200 hover:shadow-md transition-shadow duration-200">
+                      <CardContent className="p-4">
+                        <p className="font-medium text-gray-800 mb-1">{task.tarefa_nome}</p>
+                        <p className="text-gray-600 text-sm mb-2">{task.tarefa_descricao}</p>
+                        <div className="text-xs text-gray-500 space-y-1">
+                          <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
+                          <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div>
                         </div>
-                        <div className="task-status">
-                          Status: {task.tarefa_status ? "Concluída" : "Pendente"}
+                        <div className={`text-xs mt-2 font-medium py-1 px-2 rounded-full inline-block ${task.tarefa_status ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                          {task.tarefa_status ? "Concluída" : "Pendente"}
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="no-stages">
-              <p>Nenhuma etapa criada ainda.</p>
-            </div>
-          )}
+            ))}
 
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="add-stage-button">
-                + Criar Nova Etapa
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
-              <DialogHeader>
-                <DialogTitle className="text-3xl font-bold tracking-tighter text-center space-y-2">Criar Nova Etapa</DialogTitle>
-              </DialogHeader>
-              
-              <Input
-                placeholder="Nome da etapa"
-                value={newStage.nome}
-                onChange={(e) => setNewStage({...newStage, nome: e.target.value})}
-                required
-              />
-              
-              <Input
-                placeholder="Descrição"
-                value={newStage.descricao}
-                onChange={(e) => setNewStage({...newStage, descricao: e.target.value})}
-              />
-              
-              <div className="space-y-2">
-                <Input
-                  type="date"
-                  label="Data de Início"
-                  value={newStage.dataInicio}
-                  onChange={(e) => setNewStage({...newStage, dataInicio: e.target.value})}
-                />
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="flex items-center justify-center h-full">
+                  <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md cursor-pointer">
+                    + Criar Nova Etapa
+                  </Button>
+                </div>
+              </DialogTrigger>
+              <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
+                </DialogHeader>
                 
-                <Input
-                  type="date"
-                  label="Data de Término"
-                  value={newStage.dataFim}
-                  onChange={(e) => setNewStage({...newStage, dataFim: e.target.value})}
-                />
-              </div>
-              
-              <Button 
-                onClick={createStage}
-                disabled={!newStage.nome.trim()}
-                className="cursor-pointer bg-[#355EAF] hover:bg-[#2d4f95]"
-              >
-                Criar Etapa
-              </Button>
-            </DialogContent>
-          </Dialog>
-        </div>
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Nome da etapa"
+                    value={newStage.nome}
+                    onChange={(e) => setNewStage({...newStage, nome: e.target.value})}
+                    required
+                    className="w-full p-2 border rounded"
+                  />
+                  
+                  <Input
+                    placeholder="Descrição"
+                    value={newStage.descricao}
+                    onChange={(e) => setNewStage({...newStage, descricao: e.target.value})}
+                    className="w-full p-2 border rounded"
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                      <Input
+                        type="date"
+                        value={newStage.dataInicio}
+                        onChange={(e) => setNewStage({...newStage, dataInicio: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data de Término</label>
+                      <Input
+                        type="date"
+                        value={newStage.dataFim}
+                        onChange={(e) => setNewStage({...newStage, dataFim: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={createStage}
+                    disabled={!newStage.nome.trim()}
+                    className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                  >
+                    Criar Etapa
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+            <p className="text-gray-500 text-lg font-light">Nenhuma etapa criada ainda...</p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-6 py-3 rounded-lg shadow-md cursor-pointer">
+                  + Criar Nova Etapa
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  <Input
+                    placeholder="Nome da etapa"
+                    value={newStage.nome}
+                    onChange={(e) => setNewStage({...newStage, nome: e.target.value})}
+                    required
+                    className="w-full p-2 border rounded"
+                  />
+                  
+                  <Input
+                    placeholder="Descrição"
+                    value={newStage.descricao}
+                    onChange={(e) => setNewStage({...newStage, descricao: e.target.value})}
+                    className="w-full p-2 border rounded"
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                      <Input
+                        type="date"
+                        value={newStage.dataInicio}
+                        onChange={(e) => setNewStage({...newStage, dataInicio: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data de Término</label>
+                      <Input
+                        type="date"
+                        value={newStage.dataFim}
+                        onChange={(e) => setNewStage({...newStage, dataFim: e.target.value})}
+                        className="w-full p-2 border rounded"
+                      />
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    onClick={createStage}
+                    disabled={!newStage.nome.trim()}
+                    className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                  >
+                    Criar Etapa
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
 
         {selectedStage && (
           <Dialog open={!!selectedStage} onOpenChange={() => setSelectedStage(null)}>
-            <DialogContent>
+            <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-lg w-full">
               <DialogHeader>
-                <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
+                <DialogTitle className="text-xl font-bold mb-4">Adicionar Nova Tarefa</DialogTitle>
               </DialogHeader>
               
-              <Input
-                placeholder="Nome da tarefa*"
-                value={newTask.nome}
-                onChange={(e) => setNewTask({...newTask, nome: e.target.value})}
-                required
-              />
-              
-              <Input
-                placeholder="Descrição"
-                value={newTask.descricao}
-                onChange={(e) => setNewTask({...newTask, descricao: e.target.value})}
-              />
-              
-              <div className="date-inputs">
+              <div className="space-y-4">
                 <Input
-                  type="date"
-                  label="Data de Início"
-                  value={newTask.data_inicio.split('T')[0]}
-                  onChange={(e) => setNewTask({...newTask, data_inicio: e.target.value})}
+                  placeholder="Nome da tarefa*"
+                  value={newTask.nome}
+                  onChange={(e) => setNewTask({...newTask, nome: e.target.value})}
+                  required
+                  className="w-full p-2 border rounded"
                 />
                 
                 <Input
-                  type="date"
-                  label="Data de Término"
-                  value={newTask.data_fim.split('T')[0]}
-                  onChange={(e) => setNewTask({...newTask,data_fim: e.target.value})}
+                  placeholder="Descrição"
+                  value={newTask.descricao}
+                  onChange={(e) => setNewTask({...newTask, descricao: e.target.value})}
+                  className="w-full p-2 border rounded"
                 />
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                    <Input
+                      type="date"
+                      value={newTask.data_inicio.split('T')[0]}
+                      onChange={(e) => setNewTask({...newTask, data_inicio: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data de Término</label>
+                    <Input
+                      type="date"
+                      value={newTask.data_fim.split('T')[0]}
+                      onChange={(e) => setNewTask({...newTask, data_fim: e.target.value})}
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={() => addTask(selectedStage)}
+                  disabled={!newTask.nome.trim()}
+                  className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                >
+                  Adicionar Tarefa
+                </Button>
               </div>
-              
-              <Button 
-                onClick={() => addTask(selectedStage)}
-                disabled={!newTask.nome.trim()}
-              >
-                Adicionar Tarefa
-              </Button>
             </DialogContent>
           </Dialog>
         )}
