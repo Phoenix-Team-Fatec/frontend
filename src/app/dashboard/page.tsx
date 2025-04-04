@@ -15,6 +15,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userId, setUserId] = useState(3);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -22,9 +24,14 @@ export default function Dashboard() {
 
   const fetchProjetos = async () => {
     try {
+      setLoading(true);
       const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjs/${userId}`);
       setProjects(data);
-    } catch (error) {}
+    } catch (error) {
+      console.log("Error fetching projects", error);
+    }finally {
+      setLoading(false);
+    }
   };
 
   const handleProjectCreation = async (newProjectData: { title: string; responsibles: string; area: string; description: string }) => {
@@ -63,8 +70,20 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchProjetos();
+    if (typeof window !== 'undefined') {
+      const savedSidebarState = localStorage.getItem('sidebarOpen');
+      if (savedSidebarState !== null) {
+        setSidebarOpen(savedSidebarState === 'true');
+      }
+      setInitialized(true);
+    }
   }, []);
+
+  useEffect(() => {
+    if (initialized) {
+      fetchProjetos();
+    }
+  }, [initialized]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -72,67 +91,67 @@ export default function Dashboard() {
     } else {
       setImageVisible(true);
     }
-    console.log(projects);
   }, [projects]);
 
-  useEffect(() => {
-    // Initialize sidebar state from localStorage (only on client-side)
-    if (typeof window !== 'undefined') {
-      const savedSidebarState = localStorage.getItem('sidebarOpen');
-      if (savedSidebarState !== null) {
-        setSidebarOpen(savedSidebarState === 'true');
-      }
-    }
-  }, []);
+  if (!initialized) {
+    return null; 
+  }
+
 
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 
   return (
     <div className="flex">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className={`w-full p-8 transition-all duration-300 ${contentMargin} overflow-hidden`}>
+      <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
         <div className="pr-8">
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
         
-        {imageVisible && (
-          <div className="flex flex-col justify-center items-center h-full min-h-[85vh]">
-            <img
-              src="/Organizing projects-rafiki.svg"
-              alt="Work Illustration"
-              className="w-[300px] h-[400px] object-contain opacity-90"
-            />
-            <p className="text-gray-500 text-lg font-light">Seus projetos aparecerão aqui...</p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+            <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
           </div>
-        )}  
-  
-        <div className="w-full pl-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-end">
-            {projects.map((project, index) => (
-              <div key={index} className="w-full max-w-[220px]">
-                <Cards_Projects
-                  id={index}
-                  projeto_proj_nome={
-                    <Link
-                      href={`/tasks?projectId=${project.projeto_proj_id}`}
-                      className="text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
-                    >
-                      {project.projeto_proj_nome}
-                    </Link>
-                  }
-                  description={project.projeto_proj_descricao}
-                  startDate={project.projeto_proj_data_inicio}
-                  progress={project.projeto_proj_status}
-                  users={project.users}
-                  onDelete={() => handleDelete(project.proj_id)}
-                  fetchProjectData={() => {}}
-                  className="hover:shadow-lg transition-shadow duration-300"
-                />
-              </div>
-            ))}
+        ) : imageVisible ? (
+          <div className="flex flex-col justify-center items-center h-[calc(100vh-200px)] w-full">
+            <div className="flex flex-col items-center justify-center text-center">
+              <img
+                src="/Organizing projects-rafiki.svg"
+                alt="Work Illustration"
+                className="w-[350px] h-[350px] object-contain opacity-90 mx-auto"
+              />
+              <p className="text-gray-500 text-lg font-light mt-4">Seus projetos aparecerão aqui...</p>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-full pl-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-end">
+              {projects.map((project, index) => (
+                <div key={index} className="w-full max-w-[220px]">
+                  <Cards_Projects
+                    id={index}
+                    projeto_proj_nome={
+                      <Link
+                        href={`/tasks?projectId=${project.projeto_proj_id}`}
+                        className="text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
+                      >
+                        {project.projeto_proj_nome}
+                      </Link>
+                    }
+                    description={project.projeto_proj_descricao}
+                    startDate={project.projeto_proj_data_inicio}
+                    progress={project.projeto_proj_status}
+                    users={project.users}
+                    onDelete={() => handleDelete(project.proj_id)}
+                    fetchProjectData={() => {}}
+                    className="hover:shadow-lg transition-shadow duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
   
         <Button
           onClick={addCard}

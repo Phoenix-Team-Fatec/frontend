@@ -2,7 +2,19 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  Settings, 
+  Home, 
+  ListTodo, 
+  User, 
+  Briefcase,
+  LogOut,
+  Bell,
+  HelpCircle,
+  Moon
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -14,16 +26,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const pathname = usePathname();
-  const [isFirstRender, setIsFirstRender] = useState(true);
   
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsFirstRender(false);
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, []);
-
   const toggleSidebar = () => {
     const newState = !isOpen;
     setIsOpen(newState);
@@ -34,11 +37,10 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
     <motion.aside
       initial={false}
       animate={{ width: isOpen ? 250 : 80 }}
-      transition={isFirstRender ? { duration: 0 } : { duration: 0.3 }}
+      transition={{ duration: 0.3 }}
       className="fixed left-0 top-[20px] bottom-[20px] h-[calc(100%-40px)] bg-[#355EAF] text-white shadow-lg flex flex-col justify-between p-4 rounded-r-2xl z-10"
-      style={{ width: isOpen ? '250px' : '80px' }} // Set initial width via style
     >
-      {/* Rest of your component remains the same */}
+
       {!isOpen && (
         <Button
           variant="ghost"
@@ -50,6 +52,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </Button>
       )}
 
+      {/* Toggle button for open sidebar */}
       {isOpen && (
         <Button
           variant="ghost"
@@ -61,58 +64,116 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         </Button>
       )}
 
-      {/* Parte Superior */}
+      {/* Upper Section */}
       <div className="flex flex-col justify-center items-center mt-2">
-        {/* Nome da marca */}
-        {isOpen && <div className="text-xl font-bold mb-6">Lumen</div>}
+        {/* Brand Name with Logo */}
+        {isOpen ? (
+          <div className="text-xl font-bold mb-6 flex items-center">
+            <Moon className="mr-2" />
+            Lumen
+          </div>
+        ) : (
+          <div className="flex justify-center mb-6">
+            <Moon size={24} />
+          </div>
+        )}
 
-        {/* Imagem de Perfil */}
+        {/* Profile Image */}
         <Avatar className={`w-40 h-40 mb-6 ${!isOpen && "hidden"}`}>
           <AvatarImage src="URL_DA_IMAGEM" alt="Profile" />
           <AvatarFallback>UN</AvatarFallback>
         </Avatar>
 
-        {/* Links de Navegação */}
-        <ScrollArea className={`w-full ${!isOpen && "hidden"}`}>
-          <nav className="flex flex-col justify-center items-center gap-4">
+        {!isOpen && (
+          <div className="flex flex-col items-center gap-6 mb-4">
             <Link href="/dashboard">
               <Button
                 variant="ghost"
-                className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
-                  pathname === "/dashboard" ? "text-[#C5D8FF] font-bold" : "text-white"
+                size="icon"
+                className={`hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer ${
+                  pathname === "/dashboard" ? "text-[#C5D8FF]" : "text-white"
                 }`}
               >
-                Meus Projetos
+                <Briefcase size={20} />
               </Button>
             </Link>
             <Link href="/tasks">
-              <Button variant="ghost"
-              className={`cursor-pointer hover:text-[#C5D8FF] hover:bg-transparent ${
-              pathname === "/tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
-              }`}
+              <Button 
+                variant="ghost"
+                size="icon"
+                className={`hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer ${
+                  pathname === "/tasks" ? "text-[#C5D8FF]" : "text-white"
+                }`}
               >
+                <ListTodo size={20} />
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        <ScrollArea className={`w-full ${!isOpen && "hidden"}`}>
+          <nav className="flex flex-col gap-2 px-2">
+            <Link href="/dashboard" className="w-full">
+              <Button
+                variant="ghost"
+                className={`cursor-pointer w-full justify-start hover:text-[#C5D8FF] hover:bg-transparent ${
+                  pathname === "/dashboard" ? "text-[#C5D8FF] font-bold" : "text-white"
+                }`}
+              >
+                <Briefcase className="mr-2" size={18} />
+                Meus Projetos
+              </Button>
+            </Link>
+            <Link href="/tasks" className="w-full">
+              <Button 
+                variant="ghost"
+                className={`cursor-pointer w-full justify-start hover:text-[#C5D8FF] hover:bg-transparent ${
+                  pathname === "/tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
+                }`}
+              >
+                <ListTodo className="mr-2" size={18} />
                 Minhas Tarefas
               </Button>
-            </Link> 
+            </Link>
           </nav>
         </ScrollArea>
       </div>
 
-      {/* Parte Inferior (Usuário) */}
-      <Link href="/settings" className="w-full">
-          <div className={`flex items-center gap-2 mb-2 rounded-lg w-full cursor-pointer transition-all hover:bg-[#0c317c] ${isOpen ? "px-4 py-6 bg-[#0c317c75]" : "justify-center p-2"}`}>
-                <Avatar className="w-8 h-8">
-                    <AvatarImage src="URL_DA_IMAGEM" alt="user"/>
-                    <AvatarFallback>U</AvatarFallback>
-                </Avatar>
-                {isOpen && (
-                  <div className="flex items-center justify-between w-full">
-                    <span className="text-white text-sm">User Name</span>
-                    <Settings size={16} className="text-white opacity-75"/>
-                  </div>
-                )}
+      {/* Bottom Section (User and Logout) */}
+      <div className="w-full">
+        <Link href="/settings" className="w-full">
+          <div className={`flex items-center gap-2 mb-2 rounded-lg w-full cursor-pointer transition-all hover:bg-[#0c317c] ${isOpen ? "px-4 py-3 bg-[#0c317c75]" : "justify-center p-2"}`}>
+            <Avatar className="w-8 h-8">
+              <AvatarImage src="URL_DA_IMAGEM" alt="user"/>
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            {isOpen && (
+              <div className="flex items-center justify-between w-full">
+                <span className="text-white text-sm">User Name</span>
+                <Settings size={16} className="text-white opacity-75"/>
+              </div>
+            )}
           </div>
-      </Link>
+        </Link>
+        
+        {isOpen ? (
+          <Button 
+            variant="ghost"
+            className="w-full justify-start text-white hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer"
+          > 
+            <LogOut size={18} className="mr-2" />
+            Sair
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost"
+            size="icon"
+            className="w-full flex justify-center mt-4 text-white hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer"
+          >
+            <LogOut size={20} />
+          </Button>
+        )}
+      </div>
     </motion.aside>
   );
 };

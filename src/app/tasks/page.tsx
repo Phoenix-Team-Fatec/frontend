@@ -36,6 +36,7 @@ const ProjectTasks = () => {
   const [stages, setStages] = useState<Etapa[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const [newStage, setNewStage] = useState({
     nome: "",
     descricao: "",
@@ -52,7 +53,21 @@ const ProjectTasks = () => {
     tarefa_status: false
   });
 
+  // Initialize sidebar state from localStorage before rendering
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedSidebarState = localStorage.getItem('sidebarOpen');
+      if (savedSidebarState !== null) {
+        setSidebarOpen(savedSidebarState === 'true');
+      }
+      setInitialized(true);
+    }
+  }, []);
+
+  // Only fetch data after initialization
+  useEffect(() => {
+    if (!initialized) return;
+
     const fetchStages = async () => {
       try {
         const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${Number(proj_id)}`);
@@ -70,7 +85,7 @@ const ProjectTasks = () => {
     };
 
     fetchStages();
-  }, [proj_id]);
+  }, [proj_id, initialized]);
 
   const createStage = async () => {
     if (!newStage.nome.trim()) return;
@@ -142,33 +157,24 @@ const ProjectTasks = () => {
     }
   };
 
-  useEffect(() => {
-    // Initialize sidebar state from localStorage (only on client-side)
-    if (typeof window !== 'undefined') {
-      const savedSidebarState = localStorage.getItem('sidebarOpen');
-      if (savedSidebarState !== null) {
-        setSidebarOpen(savedSidebarState === 'true');
-      }
-    }
-  }, []);
-  
+  if (!initialized) {
+    return null; 
+  }
 
-  // Calculate content margin based on sidebar state
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className={`w-full p-8 transition-all duration-300 ${contentMargin}`}>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Etapas do Projeto</h2>
+      <div className={`w-full p-8 ${contentMargin}`}>
+        <h2 className="text-2xl font-bold text-gray-800">Etapas do Projeto</h2>
         <div className="pr-8">
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-            <p className="text-gray-500 text-lg font-light mb-6">Carregando etapas...</p>
-            
+            <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
           </div>
         ) : stages.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
@@ -273,7 +279,7 @@ const ProjectTasks = () => {
             <p className="text-gray-500 text-lg font-light mb-6">Nenhuma etapa criada ainda...</p>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-6 py-3 rounded-lg shadow-md cursor-pointer">
+                <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md cursor-pointer">
                   + Criar Nova Etapa
                 </Button>
               </DialogTrigger>
@@ -323,7 +329,7 @@ const ProjectTasks = () => {
                   <Button 
                     onClick={createStage}
                     disabled={!newStage.nome.trim()}
-                    className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                    className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer"
                   >
                     Criar Etapa
                   </Button>

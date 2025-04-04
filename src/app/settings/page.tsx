@@ -10,10 +10,9 @@ import Sidebar from "@/components/Sidebar/Sidebar";
 import { Camera, Save } from "lucide-react";
 
 export default function Settings() {
-  // State for sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   
-  // User profile state
   const [userData, setUserData] = useState({
     nome: "Maria",
     sobrenome: "Silva",
@@ -29,28 +28,22 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
-  // Load sidebar state from localStorage on component mount
+  // Initialize sidebar state from localStorage before rendering
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedSidebarState = localStorage.getItem("sidebarOpen");
       if (savedSidebarState !== null) {
         setSidebarOpen(savedSidebarState === "true");
       }
+      setInitialized(true);
     }
-    
-    // You would fetch the actual user data here
-    // Example:
-    // const fetchUserData = async () => {
-    //   try {
-    //     const { data } = await axios.get("http://localhost:3000/users/3");
-    //     setUserData(data);
-    //   } catch (error) {
-    //     console.error("Error fetching user data:", error);
-    //   }
-    // };
-    // 
-    // fetchUserData();
   }, []);
+
+  // Fetch user data after initialization
+  useEffect(() => {
+    if (!initialized) return;
+
+  }, [initialized]);
 
   // Handle profile changes
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -81,19 +74,7 @@ export default function Settings() {
     setIsLoading(true);
     
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Here you would actually save the data
-      // Example:
-      // await axios.put(`http://localhost:3000/users/3`, userData);
-      
-      // If avatar was changed
-      // if (avatarFile) {
-      //   const formData = new FormData();
-      //   formData.append('avatar', avatarFile);
-      //   await axios.post(`http://localhost:3000/users/3/avatar`, formData);
-      // }
       
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
@@ -104,15 +85,18 @@ export default function Settings() {
     }
   };
   
-  // Calculate content margin based on sidebar state
+  if (!initialized) {
+    return null; 
+  }
+
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen overflow-x-hidden">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className={`w-full p-8 transition-all duration-300 ${contentMargin} overflow-hidden`}>
+      <div className={`w-full p-8 ${contentMargin}`}>
         <h2 className="text-2xl font-bold text-gray-800">Configurações</h2>
-        <div className="pr-8">
+        <div>
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
 
@@ -122,7 +106,6 @@ export default function Settings() {
               <CardTitle>Informações do Perfil</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Avatar Section */}
               <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-white shadow-md">
