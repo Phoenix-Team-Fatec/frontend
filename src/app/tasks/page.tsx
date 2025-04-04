@@ -142,24 +142,35 @@ const ProjectTasks = () => {
     }
   };
 
+  useEffect(() => {
+    // Initialize sidebar state from localStorage (only on client-side)
+    if (typeof window !== 'undefined') {
+      const savedSidebarState = localStorage.getItem('sidebarOpen');
+      if (savedSidebarState !== null) {
+        setSidebarOpen(savedSidebarState === 'true');
+      }
+    }
+  }, []);
+  
+
   // Calculate content margin based on sidebar state
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen font-medium text-lg text-gray-600">
-        Carregando etapas...
-      </div>
-    );
-  }
-
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-gray-50">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
       <div className={`w-full p-8 transition-all duration-300 ${contentMargin}`}>
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Etapas do Projeto</h2>
+        <div className="pr-8">
+          <hr className="border-t-2 border-[#C4D8FF] my-4" />
+        </div>
 
-        {stages.length > 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
+            <p className="text-gray-500 text-lg font-light mb-6">Carregando etapas...</p>
+            
+          </div>
+        ) : stages.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
             {stages.map((stage) => (
               <div key={stage.etapa_id} className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">
@@ -259,7 +270,7 @@ const ProjectTasks = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-            <p className="text-gray-500 text-lg font-light">Nenhuma etapa criada ainda...</p>
+            <p className="text-gray-500 text-lg font-light mb-6">Nenhuma etapa criada ainda...</p>
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-6 py-3 rounded-lg shadow-md cursor-pointer">

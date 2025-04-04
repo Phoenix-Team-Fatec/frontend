@@ -75,23 +75,38 @@ export default function Dashboard() {
     console.log(projects);
   }, [projects]);
 
+  useEffect(() => {
+    // Initialize sidebar state from localStorage (only on client-side)
+    if (typeof window !== 'undefined') {
+      const savedSidebarState = localStorage.getItem('sidebarOpen');
+      if (savedSidebarState !== null) {
+        setSidebarOpen(savedSidebarState === 'true');
+      }
+    }
+  }, []);
+
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 
   return (
     <div className="flex">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      <div className="{className={`p-8 w-full transition-all duration-300 ${contentMargin}`}">
-      {imageVisible && (
-        <div className="flex flex-col justify-center items-center h-full min-h-[85vh]">
-          <img
-            src="/Organizing projects-rafiki.svg"
-            alt="Work Illustration"
-            className="w-[300px] h-[400px] object-contain opacity-90"
-          />
-          <p className="text-gray-500 text-lg font-light">Seus projetos aparecerão aqui...</p>
+      <div className={`w-full p-8 transition-all duration-300 ${contentMargin} overflow-hidden`}>
+        <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
+        <div className="pr-8">
+          <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
-      )}  
-
+        
+        {imageVisible && (
+          <div className="flex flex-col justify-center items-center h-full min-h-[85vh]">
+            <img
+              src="/Organizing projects-rafiki.svg"
+              alt="Work Illustration"
+              className="w-[300px] h-[400px] object-contain opacity-90"
+            />
+            <p className="text-gray-500 text-lg font-light">Seus projetos aparecerão aqui...</p>
+          </div>
+        )}  
+  
         <div className="w-full pl-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-end">
             {projects.map((project, index) => (
@@ -118,14 +133,14 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
-
+  
         <Button
           onClick={addCard}
           className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-[#355EAF] text-white flex items-center justify-center shadow-xl hover:bg-[#2C4B8B] hover:scale-105 transition-all duration-300 cursor-pointer"
         >
           <Plus size={28} className="stroke-[3]" />
         </Button>
-
+  
         <ProjectRegistration open={isModalOpen} setOpen={setIsModalOpen} onProjectCreated={handleProjectCreation} />
       </div>
     </div>
