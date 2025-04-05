@@ -38,39 +38,42 @@ export default function ForgotPassword() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full max-w-md"
-            >
-                <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-                    <div className="text-center space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tighter">Esqueceu sua senha?</h1>
-                        <p className="text-muted-foreground">Digite o e-mail para o qual deseja receber as instruções de redefinição de senha.</p>
-                    </div>
-                    <form>
-                        <div className="space-y-2">
-                            <Label htmlFor="email">E-mail</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                placeholder="teste@email.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                            />
-                        </div>
-                        <Button type="submit" className="w-full bg-[#355EAF] mt-8 cursor-pointer">
-                            Solicitar link de redefinição
-                        </Button>
-                    </form>
-                    <div className="text-center text-sm">
-                        <a href="/sign-in" className="text-primary-500 hover:text-primary-600 font-medium">Voltar para o login</a>
-                    </div>
+        <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat"
+            style={{
+                backgroundImage: "url('/sign.png')", 
+            }}>
+            <div className="bg-white rounded-2xl shadow-xl p-12 space-y-6 w-120">
+                <div className="flex justify-center items-center">
+                    <img 
+                        src="/forgot_password2.png" 
+                        className="h-40 transform rotate-" 
+                        alt="Forgot Password"
+                    />
                 </div>
-            </motion.div>
+                <div className="text-center space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tighter">Esqueceu sua senha?</h1>
+                    <p className="text-muted-foreground">Digite o e-mail para o qual deseja receber as instruções de redefinição de senha.</p>
+                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-2">
+                        <Label htmlFor="email">E-mail</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            placeholder="teste@email.com"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <Button type="submit" className="w-full bg-[#355EAF] mt-8 cursor-pointer hover:bg-[#2d4f95]">
+                        Solicitar link de redefinição
+                    </Button>
+                </form>
+                <div className="text-center text-sm">
+                    <a href="/sign-in" className="text-primary-500 hover:text-primary-600 font-medium hover:underline">Voltar para o login</a>
+                </div>
+            </div>
         </div>
     )
 }

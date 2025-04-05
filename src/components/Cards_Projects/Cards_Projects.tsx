@@ -1,10 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Pencil, Trash, MoreVertical } from "lucide-react";
+import { Pencil, Trash, MoreVertical, AlertTriangle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "../ui/input";
 
 interface CardProps {
   id: number;
@@ -64,7 +65,7 @@ export default function Cards_Projects({
 
   return (
     <>
-      <Card className="w-[300px] h-[130px] bg-gray-200 p-4 rounded-lg shadow-md relative">
+      <Card className="w-[300px] bg-gray-200  p-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative cursor-pointer">
         <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
           <Pencil
             size={16}
@@ -80,25 +81,30 @@ export default function Cards_Projects({
         </div>
 
         <CardContent className="p-0">
-          <h2 className="text-sm font-bold text-gray-900">{projectData.projeto_proj_nome}</h2>
-          <p className="text-xs text-gray-500">{projectData.description}</p>
-
-          {/* Verificar se users não está vazio ou indefinido */}
-          <div className="flex items-center mt-2 space-x-[-8px]">
-            {users && users.length > 0 ? (
-              users.map((user, index) => (
-                <Avatar key={index} className="w-6 h-6 border border-white">
-                  <AvatarFallback className="bg-blue-600 text-white text-xs">{user[0]}</AvatarFallback> {/* Exibe a primeira letra do nome */}
-                </Avatar>
-              ))
-            ) : (
-              <span className="text-xs text-gray-500">Nenhum usuário</span>
-            )}
-            {users.length < 4 && (
-              <Avatar className="w-6 h-6 bg-white text-xs border border-gray-300">
-                +{users.length}
-              </Avatar>
-            )}
+          <h2 className="text-base font-semibold text-gray-900 line-clamp-1">{projectData.projeto_proj_nome}</h2>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2 h-10">{projectData.description}</p>
+          
+          <div className="flex justify-between items-center">
+            <div className="flex -space-x-2">
+              {users && users.length > 0 ? (
+                <>
+                  {users.slice(0, 4).map((user, index) => (
+                    <Avatar key={index} className="w-8 h-8 border-2 border-white rounded-full ring-2 ring-white">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs">
+                        {user[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  ))}
+                  {users.length > 4 && (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 border-2 border-white text-xs font-medium text-gray-600">
+                      +{users.length - 4}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <span className="text-xs text-gray-500">Nenhum usuário</span>
+              )}
+            </div>
           </div>
 
           {/* Barra de progresso */}
@@ -111,9 +117,9 @@ export default function Cards_Projects({
 
       {/* Modal de Edição */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Editar Projeto</DialogTitle>
+            <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Editar Projeto</DialogTitle>
           </DialogHeader>
 
           <input
@@ -132,31 +138,31 @@ export default function Cards_Projects({
             rows={3}
           />
 
-          <div className="flex justify-between text-sm text-gray-500">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label>Início:</label>
-              <input
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início:</label>
+              <Input
                 type="date"
                 name="startDate"
                 value={projectData.startDate}
                 onChange={handleChange}
-                className="border p-1 rounded-md"
+                className="w-full p-2 border rounded"
               />
             </div>
             <div>
-              <label>Fim:</label>
-              <input
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data de Término:</label>
+              <Input
                 type="date"
                 name="endDate"
                 value={projectData.endDate}
                 onChange={handleChange}
-                className="border p-1 rounded-md"
+                className="w-full p-2 border rounded"
               />
             </div>
           </div>
 
           <Button
-            className="w-full bg-blue-500 text-white rounded-md p-2 mt-4"
+            className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer"
             onClick={handleSave}
           >
             Salvar
@@ -166,23 +172,32 @@ export default function Cards_Projects({
 
       {/* Modal de Exclusão */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="max-w-md p-6 bg-white rounded-lg shadow-lg">
+        <DialogContent className="text-2xl font-bold tracking-tight text-center mb-6">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Tem certeza que deseja excluir o projeto?</DialogTitle>
           </DialogHeader>
 
-          <div className="flex justify-between mt-4">
+          <div className="mt-3 pl-1">
+            <div className="flex items-center text-sm text-red-700">
+              <AlertTriangle size={16} className="mr-2" />
+              <p>Todos os dados associados a este projeto serão removidos.</p>
+            </div>
+          </div>
+
+          <div className="p-5 bg-gray-50 flex flex-col sm:flex-row gap-3 sm:justify-center">
             <Button
-              className=" bg-red-500 text-white rounded-md p-5"
-              onClick={handleDelete}
-            >
-              Excluir
-            </Button>
-            <Button
-              className=" bg-gray-500 text-white rounded-md p-5"
+              variant="outline"
+              className="border-gray-300 hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer"
               onClick={() => setIsDeleteModalOpen(false)}
             >
               Cancelar
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-2 cursor-pointer"
+              onClick={handleDelete}
+            >
+              <Trash size={16} />
+              Excluir Projeto
             </Button>
           </div>
         </DialogContent>
