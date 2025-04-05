@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,12 @@ import SimpleAIChat from "@/components/SimpleAIChat/SimpleAIChat";
 import Link from "next/link";
 import Cards_Projects from "@/components/Cards_Projects/Cards_Projects";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import { getUserData } from "@/utils/auth";
 
 export default function Dashboard() {
+  const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,6 +26,15 @@ export default function Dashboard() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(true);
+
+  useEffect(() => {
+    const userData = getUserData();
+    if (!userData) {
+      router.push('/sign-in');
+    } else {
+      setAuthChecked(true);
+    }
+  }, [router]);
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -119,10 +132,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (initialized) {
+    if (initialized && authChecked) {
       fetchProjetos();
     }
-  }, [initialized]);
+  }, [initialized, authChecked]);
 
   useEffect(() => {
     if (projects.length > 0) {
@@ -132,10 +145,13 @@ export default function Dashboard() {
     }
   }, [projects]);
 
-  if (!initialized) {
-    return null; 
+  if (!authChecked || !initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
+      </div>
+    );
   }
-
 
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
 

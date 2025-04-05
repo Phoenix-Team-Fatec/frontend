@@ -9,8 +9,7 @@ import { Eye, EyeOff } from "lucide-react";
 import CryptoJS from "crypto-js";
 import axios from "axios";
 import { useRouter } from 'next/navigation';
-
-
+import { setCookie } from 'cookies-next'; 
 
 export default function SignIn() {
     const [email, setEmail] = useState('')
@@ -36,8 +35,11 @@ export default function SignIn() {
                 JSON.stringify(response.data.user),
                 secretKey
             ).toString();
-
             sessionStorage.setItem("userData", encryptedData);
+            setCookie("userData", encryptedData, {
+                maxAge: 60 * 60 * 24, // 1 day
+                path: '/',
+            });
 
             router.push('/dashboard');
         } catch (error) {
@@ -47,11 +49,10 @@ export default function SignIn() {
     }
 
     return (
-
-    <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat" 
-        style={{
-            backgroundImage: "url('/sign.png')", 
-          }}>
+        <div className="h-screen flex items-center justify-center relative bg-cover bg-center bg-no-repeat" 
+            style={{
+                backgroundImage: "url('/sign.png')", 
+            }}>
 
                 <div className="bg-white rounded-xl shadow-xl p-12 space-y-6 w-120">
                     <div className="text-center space-y-2">

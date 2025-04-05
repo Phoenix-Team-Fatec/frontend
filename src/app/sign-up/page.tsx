@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Upload } from "lucide-react";
 import Cropper from "react-easy-crop";
 import axios from "axios";
-import { checkPasswordStrength, getPasswordStrengthColor } from "@/lib/password-checker";
+import { checkPasswordStrength, getPasswordStrengthColor } from "@/utils/password-checker";
 import Popup from "@/components/Feedback/popup";
 
 async function getCroppedImg(imageSrc: string, crop: any) {
