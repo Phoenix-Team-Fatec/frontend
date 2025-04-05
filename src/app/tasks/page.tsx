@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar/Sidebar";
+import Popup from "@/components/Feedback/popup";
 import axios from 'axios';
 import { useSearchParams } from "next/navigation";
 
@@ -37,23 +38,53 @@ const ProjectTasks = () => {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const [newStage, setNewStage] = useState({
+  
+  const initialStageState = {
     nome: "",
     descricao: "",
     dataInicio: "",
     dataFim: "",
     status: true
-  });
-  const [selectedStage, setSelectedStage] = useState<number | null>(null);
-  const [newTask, setNewTask] = useState({
+  };
+  
+  const initialTaskState = {
     nome: "",
     descricao: "",
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     tarefa_status: false
-  });
+  };
+  
+  const [newStage, setNewStage] = useState(initialStageState);
+  const [selectedStage, setSelectedStage] = useState<number | null>(null);
+  const [newTask, setNewTask] = useState(initialTaskState);
+  const [isStageDialogOpen, setIsStageDialogOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(true);
 
-  // Initialize sidebar state from localStorage before rendering
+  const showNotification = (message: string, success: boolean) => {
+    setPopupMessage(message);
+    setIsSuccess(success);
+    setShowPopup(true);
+    
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
+  };
+  
+  useEffect(() => {
+    if (!isStageDialogOpen) {
+      setNewStage(initialStageState);
+    }
+  }, [isStageDialogOpen]);
+  
+  useEffect(() => {
+    if (selectedStage === null) {
+      setNewTask(initialTaskState);
+    }
+  }, [selectedStage]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const savedSidebarState = localStorage.getItem('sidebarOpen');
@@ -64,7 +95,6 @@ const ProjectTasks = () => {
     }
   }, []);
 
-  // Only fetch data after initialization
   useEffect(() => {
     if (!initialized) return;
 
@@ -79,13 +109,25 @@ const ProjectTasks = () => {
       } catch (error) {
         console.error("Erro ao buscar etapas:", error);
         setStages([]);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchStages();
   }, [proj_id, initialized]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (loading) {
+      timer = setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
 
   const createStage = async () => {
     if (!newStage.nome.trim()) return;
@@ -103,16 +145,14 @@ const ProjectTasks = () => {
       const response = await axios.post(`http://localhost:3000/etapas`, etapaData);
       
       setStages(prev => [...prev, { ...response.data, tarefas: [] }]);
-      setNewStage({
-        nome: "",
-        descricao: "",
-        dataInicio: "",
-        dataFim: "",
-        status: true
-      });
+      
+      setNewStage(initialStageState);
+      setIsStageDialogOpen(false);
+      
+      showNotification("Etapa criada com sucesso!", true);
     } catch (error) {
       console.error("Erro ao criar etapa:", error);
-      alert("Erro ao criar etapa. Verifique os dados e tente novamente.");
+      showNotification("Erro ao criar etapa. Verifique os dados e tente novamente.", false);
     }
   };
 
@@ -139,21 +179,33 @@ const ProjectTasks = () => {
         )
       );
 
-      setNewTask({
-        nome: "",
-        descricao: "",
-        data_inicio: new Date().toISOString().split('T')[0],
-        data_fim: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        tarefa_status: false
-      });
+      setNewTask(initialTaskState);
       setSelectedStage(null);
+      
+      showNotification("Tarefa adicionada com sucesso!", true);
     } catch (error) {
       console.error("Erro ao criar tarefa:", error);
-      alert(
+      
+      showNotification(
         axios.isAxiosError(error) 
           ? error.response?.data?.message || "Erro ao criar tarefa"
-          : "Erro desconhecido"
+          : "Erro desconhecido",
+        false
       );
+    }
+  };
+  
+  const handleStageDialogChange = (open: boolean) => {
+    if (!open) {
+      setNewStage(initialStageState);
+    }
+    setIsStageDialogOpen(open);
+  };
+  
+  const handleTaskDialogChange = (open: boolean) => {
+    if (!open) {
+      setNewTask(initialTaskState);
+      setSelectedStage(null);
     }
   };
 
@@ -166,6 +218,14 @@ const ProjectTasks = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      
+      <Popup 
+        isOpen={showPopup}
+        message={popupMessage}
+        isSuccess={isSuccess}
+        onClose={() => setShowPopup(false)}
+      />
+      
       <div className={`w-full p-8 ${contentMargin}`}>
         <h2 className="text-2xl font-bold text-gray-800">Etapas do Projeto</h2>
         <div className="pr-8">
@@ -212,10 +272,13 @@ const ProjectTasks = () => {
               </div>
             ))}
 
-            <Dialog>
+            <Dialog open={isStageDialogOpen} onOpenChange={handleStageDialogChange}>
               <DialogTrigger asChild>
                 <div className="flex items-center justify-center h-full">
-                  <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md cursor-pointer">
+                  <Button 
+                    onClick={() => setIsStageDialogOpen(true)}
+                    className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md cursor-pointer"
+                  >
                     + Criar Nova Etapa
                   </Button>
                 </div>
@@ -266,7 +329,7 @@ const ProjectTasks = () => {
                   <Button 
                     onClick={createStage}
                     disabled={!newStage.nome.trim()}
-                    className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                    className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer"
                   >
                     Criar Etapa
                   </Button>
@@ -277,9 +340,12 @@ const ProjectTasks = () => {
         ) : (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
             <p className="text-gray-500 text-lg font-light mb-6">Nenhuma etapa criada ainda...</p>
-            <Dialog>
+            <Dialog open={isStageDialogOpen} onOpenChange={handleStageDialogChange}>
               <DialogTrigger asChild>
-                <Button className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md cursor-pointer">
+                <Button 
+                  onClick={() => setIsStageDialogOpen(true)}
+                  className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md cursor-pointer"
+                >
                   + Criar Nova Etapa
                 </Button>
               </DialogTrigger>
@@ -340,15 +406,15 @@ const ProjectTasks = () => {
         )}
 
         {selectedStage && (
-          <Dialog open={!!selectedStage} onOpenChange={() => setSelectedStage(null)}>
+          <Dialog open={!!selectedStage} onOpenChange={handleTaskDialogChange}>
             <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-lg w-full">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold mb-4">Adicionar Nova Tarefa</DialogTitle>
+                <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Adicionar Nova Tarefa</DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
                 <Input
-                  placeholder="Nome da tarefa*"
+                  placeholder="Nome da tarefa"
                   value={newTask.nome}
                   onChange={(e) => setNewTask({...newTask, nome: e.target.value})}
                   required
@@ -387,7 +453,7 @@ const ProjectTasks = () => {
                 <Button 
                   onClick={() => addTask(selectedStage)}
                   disabled={!newTask.nome.trim()}
-                  className="w-full bg-[#355EAF] hover:bg-[#2d4f95] text-white font-medium py-2 rounded"
+                  className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer"
                 >
                   Adicionar Tarefa
                 </Button>

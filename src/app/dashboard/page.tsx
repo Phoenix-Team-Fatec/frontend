@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import ProjectRegistration from "@/components/ProjectRegistration/ProjectRegistration";
+import Popup from "@/components/Feedback/popup";
+import SimpleAIChat from "@/components/SimpleAIChat/SimpleAIChat";
 import Link from "next/link";
 import Cards_Projects from "@/components/Cards_Projects/Cards_Projects";
 import axios from "axios";
@@ -17,6 +19,9 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(true);
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -29,9 +34,33 @@ export default function Dashboard() {
       setProjects(data);
     } catch (error) {
       console.log("Error fetching projects", error);
-    }finally {
-      setLoading(false);
+      showNotification("Erro ao carregar projetos", false);
+    } finally {
     }
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (loading) {
+      timer = setTimeout(() => {
+        setLoading(false);
+      }, 1000);
+    }
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [loading]);
+
+  const showNotification = (message: string, success: boolean) => {
+    setPopupMessage(message);
+    setIsSuccess(success);
+    setShowPopup(true);
+    
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
   };
 
   const handleProjectCreation = async (newProjectData: { title: string; responsibles: string; area: string; description: string }) => {
@@ -53,11 +82,15 @@ export default function Dashboard() {
         };
         const response_relUserProj = await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
         console.log(response_relUserProj.data);
+        
+        showNotification("Projeto criado com sucesso!", true);
       } catch (error) {
         console.error("Erro ao criar relUserProj", error);
+        showNotification("Erro ao associar usuário ao projeto", false);
       }
     } catch (error) {
       console.error("Erro ao criar projeto", error);
+      showNotification("Erro ao criar projeto", false);
     }
 
     fetchProjetos();
@@ -65,8 +98,14 @@ export default function Dashboard() {
   };
 
   const handleDelete = async (id: number) => {
-    const response = await axios.put(`http://localhost:3000/projeto/delete/${id}`);
-    fetchProjetos();
+    try {
+      const response = await axios.put(`http://localhost:3000/projeto/delete/${id}`);
+      fetchProjetos();
+      showNotification("Projeto excluído com sucesso!", true);
+    } catch (error) {
+      console.error("Erro ao excluir projeto", error);
+      showNotification("Erro ao excluir projeto", false);
+    }
   };
 
   useEffect(() => {
@@ -103,6 +142,16 @@ export default function Dashboard() {
   return (
     <div className="flex">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      
+      <Popup 
+        isOpen={showPopup}
+        message={popupMessage}
+        isSuccess={isSuccess}
+        onClose={() => setShowPopup(false)}
+      />
+      
+      <SimpleAIChat />
+      
       <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
         <div className="pr-8">
@@ -125,8 +174,8 @@ export default function Dashboard() {
             </div>
           </div>
         ) : (
-          <div className="w-full pl-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-end">
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-start py-6">
               {projects.map((project, index) => (
                 <div key={index} className="w-full max-w-[220px]">
                   <Cards_Projects

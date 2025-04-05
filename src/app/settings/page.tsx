@@ -8,16 +8,18 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import { Camera, Save } from "lucide-react";
+import { useUser } from "@/hook/UserData";
 
 export default function Settings() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const user = useUser();
   
+  // User data state
   const [userData, setUserData] = useState({
-    nome: "Maria",
-    sobrenome: "Silva",
-    email: "maria.silva@example.com",
-    avatar: ""
+    nome: "",
+    sobrenome: "",
+    email: ""
   });
 
   // File upload state
@@ -39,11 +41,16 @@ export default function Settings() {
     }
   }, []);
 
-  // Fetch user data after initialization
+  // Initialize user data when user object changes
   useEffect(() => {
-    if (!initialized) return;
-
-  }, [initialized]);
+    if (user) {
+      setUserData({
+        nome: user.user_nome || "",
+        sobrenome: user.user_sobrenome || "",
+        email: user.user_email || ""
+      });
+    }
+  }, [user]);
 
   // Handle profile changes
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,9 +116,9 @@ export default function Settings() {
               <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
                 <div className="relative">
                   <Avatar className="w-32 h-32 border-4 border-white shadow-md">
-                    <AvatarImage src={avatarPreview || userData.avatar || undefined} />
+                    <AvatarImage src={avatarPreview || user?.user_foto || ""} alt="user" />
                     <AvatarFallback className="text-2xl bg-[#355EAF] text-white">
-                      {userData.nome[0]}{userData.sobrenome[0]}
+                      {user?.user_nome?.[0] || ""}{user?.user_sobrenome?.[0] || ""}
                     </AvatarFallback>
                   </Avatar>
                   <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#355EAF] text-white p-2 rounded-full cursor-pointer shadow-md hover:bg-[#2C4B8B] transition-colors">

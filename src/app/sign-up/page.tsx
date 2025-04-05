@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useCallback, useRef, FormEvent } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback, useEffect, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Upload } from "lucide-react";
 import Cropper from "react-easy-crop";
 import axios from "axios";
+import { checkPasswordStrength, getPasswordStrengthColor } from "@/lib/password-checker";
+import Popup from "@/components/Feedback/popup";
 
 async function getCroppedImg(imageSrc: string, crop: any) {
     const image = new Image();
@@ -43,6 +44,7 @@ export default function SignUp() {
     const [lastName, setLastName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [photo, setPhoto] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
@@ -52,6 +54,29 @@ export default function SignUp() {
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
     const [showCropper, setShowCropper] = useState(false);
+    
+    const [showPopup, setShowPopup] = useState(false);
+    const [popupMessage, setPopupMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
+
+    useEffect(() => {
+        setPasswordStrength(checkPasswordStrength(password));
+    }, [password]);
+
+    const showMessagePopup = (message: string, success: boolean) => {
+        setPopupMessage(message);
+        setIsSuccess(success);
+        setShowPopup(true);
+        
+        if (success) {
+            setTimeout(() => {
+                setShowPopup(false);
+                if (message === "Usuário criado com sucesso") {
+                    window.location.href = "/sign-in";
+                }
+            }, 3000);
+        }
+    };
 
     const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length == 0) {
@@ -85,6 +110,11 @@ export default function SignUp() {
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if (passwordStrength.score < 3) {
+            showMessagePopup("Por favor, use uma senha mais forte: " + passwordStrength.feedback, false);
+            return;
+        }
+
         const formData = new FormData();
         formData.append("user_nome", firstName);
         formData.append("user_sobrenome", lastName);
@@ -102,8 +132,7 @@ export default function SignUp() {
                 headers: { "Content-Type": "multipart/form-data" },
             });
             console.log("Usuário criado com sucesso", response.data);
-            alert("Usuário criado com sucesso")
-            window.location.href = "/sign-in";
+            showMessagePopup("Usuário criado com sucesso", true);
         } catch (error: any) {
             console.error("Erro ao criar usuário", error.response?.data || error.message);
 
@@ -111,14 +140,14 @@ export default function SignUp() {
                 const errorMessage = error.response?.data?.details?.code || error.response?.data?.error;
 
                 if (errorMessage === "Já existe um usuário com esse email") {
-                    alert("Já existe um usuário com esse email");
+                    showMessagePopup("Já existe um usuário com esse email", false);
                 } else if (errorMessage.includes("auth/weak-password")) {
-                    alert("A senha fornecida é muito fraca");
+                    showMessagePopup("A senha fornecida é muito fraca", false);
                 } else {
-                    alert("Erro: " + errorMessage);
+                    showMessagePopup("Erro: " + errorMessage, false);
                 }
             } else {
-                alert("Erro ao criar usuário: " + error.message);
+                showMessagePopup("Erro ao criar usuário: " + error.message, false);
             }
         }
     };
@@ -128,6 +157,13 @@ export default function SignUp() {
             style={{
                 backgroundImage: "url('/sign.png')", 
             }}>
+                <Popup 
+                    isOpen={showPopup}
+                    message={popupMessage}
+                    isSuccess={isSuccess}
+                    onClose={() => setShowPopup(false)}
+                />
+                
                 <div className="bg-white rounded-xl shadow-xl p-12 space-y-6 w-120">
                     <div className="text-center space-y-2">
                         <h1 className="text-3xl font-bold tracking-tighter">Bem-vindo ao Lumen!</h1>
@@ -186,6 +222,18 @@ export default function SignUp() {
                                     {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                 </button>
                             </div>
+                            {/* Password strength indicator */}
+                            {password.length > 0 && (
+                                <div className="mt-1 space-y-1">
+                                    <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+                                        <div 
+                                            className={`h-full ${getPasswordStrengthColor(passwordStrength.score, password.length)} transition-all duration-300`} 
+                                            style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                                        ></div>
+                                    </div>
+                                    <p className="text-sm text-gray-600">{passwordStrength.feedback}</p>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="photo">Foto de Perfil</Label>

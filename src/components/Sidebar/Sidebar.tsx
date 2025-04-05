@@ -6,18 +6,15 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Settings, 
-  Home, 
   ListTodo, 
-  User, 
   Briefcase,
   LogOut,
-  Bell,
-  HelpCircle,
   Moon
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useUser } from "@/hook/UserData";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,12 +23,18 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
   const pathname = usePathname();
+  const user = useUser()
   
   const toggleSidebar = () => {
     const newState = !isOpen;
     setIsOpen(newState);
     localStorage.setItem('sidebarOpen', newState.toString());
   };
+
+  const handleLougout = () => {
+    sessionStorage.removeItem("userData")
+    window.location.href = "/sign-in"
+  }
 
   return (
     <motion.aside
@@ -80,7 +83,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
 
         {/* Profile Image */}
         <Avatar className={`w-40 h-40 mb-6 ${!isOpen && "hidden"}`}>
-          <AvatarImage src="URL_DA_IMAGEM" alt="Profile" />
+          <AvatarImage src={user?.user_foto || ""} alt="user" />
           <AvatarFallback>UN</AvatarFallback>
         </Avatar>
 
@@ -132,7 +135,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 }`}
               >
                 <ListTodo className="mr-2" size={18} />
-                Minhas Tarefas
+                Minhas tarefas
               </Button>
             </Link>
           </nav>
@@ -144,12 +147,16 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
         <Link href="/settings" className="w-full">
           <div className={`flex items-center gap-2 mb-2 rounded-lg w-full cursor-pointer transition-all hover:bg-[#0c317c] ${isOpen ? "px-4 py-3 bg-[#0c317c75]" : "justify-center p-2"}`}>
             <Avatar className="w-8 h-8">
-              <AvatarImage src="URL_DA_IMAGEM" alt="user"/>
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage src={user?.user_foto || ""} alt="user"/>
+              <AvatarFallback>
+                {user ? `${user.user_nome?.[0] || ''}${user.user_sobrenome?.[0] || ''}` : 'U'}
+              </AvatarFallback>
             </Avatar>
             {isOpen && (
               <div className="flex items-center justify-between w-full">
-                <span className="text-white text-sm">User Name</span>
+                <span className="text-white text-sm">
+                  {user ? `${user.user_nome || ''} ${user.user_sobrenome || ''}` : 'Loading...'}
+                </span>
                 <Settings size={16} className="text-white opacity-75"/>
               </div>
             )}
@@ -160,6 +167,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
           <Button 
             variant="ghost"
             className="w-full justify-start text-white hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer"
+            onClick={handleLougout}
           > 
             <LogOut size={18} className="mr-2" />
             Sair
@@ -169,6 +177,7 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
             variant="ghost"
             size="icon"
             className="w-full flex justify-center mt-4 text-white hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer"
+            onClick={handleLougout}
           >
             <LogOut size={20} />
           </Button>
