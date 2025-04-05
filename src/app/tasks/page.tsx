@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import Popup from "@/components/Feedback/popup";
 import axios from 'axios';
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getUserData } from "@/utils/auth";
 
 interface Tarefa {
   tarefa_id: number;
@@ -62,6 +63,17 @@ const ProjectTasks = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
+  
+    useEffect(() => {
+      const userData = getUserData();
+      if (!userData) {
+        router.push('/sign-in');
+      } else {
+        setAuthChecked(true);
+      }
+    }, [router]);
 
   const showNotification = (message: string, success: boolean) => {
     setPopupMessage(message);
@@ -136,8 +148,12 @@ const ProjectTasks = () => {
       const etapaData = {
         etapaNome: newStage.nome,
         etapaDescricao: newStage.descricao,
-        etapaDataInicio: newStage.dataInicio || new Date().toISOString().split('T')[0],
-        etapaDataFim: newStage.dataFim || new Date().toISOString().split('T')[0],
+        etapaDataInicio: newStage.dataInicio 
+          ? new Date(newStage.dataInicio + 'T12:00:00').toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
+        etapaDataFim: newStage.dataFim 
+          ? new Date(newStage.dataFim + 'T12:00:00').toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0],
         etapaStatus: newStage.status,
         projId: Number(proj_id)
       };
@@ -160,10 +176,16 @@ const ProjectTasks = () => {
     if (!newTask.nome.trim()) return;
     
     try {
-      const response = await axios.post(`http://localhost:3000/tarefa`, {
-        ...newTask,
+      const taskData = {
+        nome: newTask.nome,
+        descricao: newTask.descricao,
+        data_inicio: new Date(newTask.data_inicio + 'T12:00:00').toISOString().split('T')[0],
+        data_fim: new Date(newTask.data_fim + 'T12:00:00').toISOString().split('T')[0],
+        tarefa_status: newTask.tarefa_status,
         etapa_id: etapaId
-      });
+      };
+
+      const response = await axios.post(`http://localhost:3000/tarefa`, taskData);
 
       setStages(prevStages =>
         prevStages.map(stage =>
@@ -209,8 +231,12 @@ const ProjectTasks = () => {
     }
   };
 
-  if (!initialized) {
-    return null; 
+  if (!authChecked || !initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
+      </div>
+    );
   }
 
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";

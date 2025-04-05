@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/hook/UserData';
 
-// Define the message type
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
