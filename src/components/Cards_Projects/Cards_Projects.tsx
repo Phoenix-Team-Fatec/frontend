@@ -19,6 +19,7 @@ interface CardProps {
   users?: any[]; 
   onDelete: (id: number) => void;
   fetchProjectData?: (id: number) => void;
+  onNotify?: (message: string, success: boolean) => void; // Add this prop
   className?: string;
 }
 
@@ -39,6 +40,7 @@ export default function Cards_Projects({
   users = [],
   onDelete,
   fetchProjectData,
+  onNotify, // Add this to parameters
   className = "",
 }: CardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -87,6 +89,13 @@ export default function Cards_Projects({
   };
 
   const showNotification = (message: string, success: boolean) => {
+    // If parent provided a notification function, use it
+    if (onNotify) {
+      onNotify(message, success);
+      return;
+    }
+    
+    // Otherwise use local notification
     setPopupMessage(message);
     setIsSuccess(success);
     setShowPopup(true);
@@ -150,12 +159,15 @@ export default function Cards_Projects({
 
   return (
     <>
-      <Popup 
-        isOpen={showPopup}
-        message={popupMessage}
-        isSuccess={isSuccess}
-        onClose={() => setShowPopup(false)}
-      />
+      {/* Only render the Popup if we're not using the parent's notification */}
+      {!onNotify && (
+        <Popup 
+          isOpen={showPopup}
+          message={popupMessage}
+          isSuccess={isSuccess}
+          onClose={() => setShowPopup(false)}
+        />
+      )}
     
       <Card className={`w-[300px] bg-gray-200 p-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative cursor-pointer ${className}`}>
         <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
