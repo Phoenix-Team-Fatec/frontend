@@ -112,7 +112,7 @@ export default function Dashboard() {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await axios.put(`http://localhost:3000/projeto/delete/${id}`);
+      const response = await axios.delete(`http://localhost:3000/projeto/delete/${id}`);
       fetchProjetos();
       showNotification("Projeto excluído com sucesso!", true);
     } catch (error) {
@@ -192,10 +192,10 @@ export default function Dashboard() {
         ) : (
           <div className="w-full">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-start py-6">
-              {projects.map((project, index) => (
-                <div key={index} className="w-full max-w-[220px]">
+            {projects.map((project) => (
+                <div key={project.projeto_proj_id} className="w-full max-w-[220px]">
                   <Cards_Projects
-                    id={index}
+                    id={project.projeto_proj_id} 
                     projeto_proj_nome={
                       <Link
                         href={`/tasks?projectId=${project.projeto_proj_id}`}
@@ -206,10 +206,11 @@ export default function Dashboard() {
                     }
                     description={project.projeto_proj_descricao}
                     startDate={project.projeto_proj_data_inicio}
-                    progress={project.projeto_proj_status}
-                    users={project.users}
-                    onDelete={() => handleDelete(project.proj_id)}
-                    fetchProjectData={() => {}}
+                    endDate={project.projeto_proj_data_fim || ""}
+                    progress={project.projeto_proj_status || 0}
+                    users={project.users || []}
+                    onDelete={() => handleDelete(project.projeto_proj_id)} 
+                    fetchProjectData={fetchProjetos}
                     className="hover:shadow-lg transition-shadow duration-300"
                   />
                 </div>

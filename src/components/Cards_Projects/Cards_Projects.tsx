@@ -1,71 +1,163 @@
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Pencil, Trash, MoreVertical, AlertTriangle } from "lucide-react";
-import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "../ui/input";
+import Popup from "@/components/Feedback/popup";
+import axios from "axios";
 
 interface CardProps {
   id: number;
-  projeto_proj_nome: string;
+  projeto_proj_nome: React.ReactNode | string;
   description: string;
   startDate: string;
-  endDate: string;
-  progress: number; // Percentual de progresso
-  users: string[]; // Lista de usuários (nomes ou identificadores dos usuários)
-  onDelete: (id: number) => void; // Função de exclusão
-  fetchProjectData: (id: number) => void; // Função para atualizar dados do projeto
+  endDate?: string;
+  progress: number; 
+  users?: any[]; 
+  onDelete: (id: number) => void;
+  fetchProjectData?: (id: number) => void;
+  className?: string;
 }
+
+type ReactElementWithProps = React.ReactElement & {
+  props: {
+    children?: React.ReactNode;
+    [key: string]: any;
+  };
+};
 
 export default function Cards_Projects({
   id,
   projeto_proj_nome,
   description,
   startDate,
-  endDate,
-  progress,
-  users = [], // Definir um valor padrão para users como array vazio
+  endDate = "",
+  progress = 0,
+  users = [],
   onDelete,
   fetchProjectData,
+  className = "",
 }: CardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(true);
+  
+  const extractProjectName = (): string => {
+    if (typeof projeto_proj_nome === 'string') {
+      return projeto_proj_nome;
+    }
+    
+    if (React.isValidElement(projeto_proj_nome)) {
+      const element = projeto_proj_nome as ReactElementWithProps;
+      
+      const linkChildren = element.props.children;
+      
+      if (typeof linkChildren === 'string') {
+        return linkChildren;
+      }
+      
+      if (React.isValidElement(linkChildren)) {
+        const childElement = linkChildren as ReactElementWithProps;
+        return String(childElement.props.children || '');
+      }
+      
+      if (Array.isArray(linkChildren)) {
+        const textContent = linkChildren.find(child => typeof child === 'string');
+        return typeof textContent === 'string' ? textContent : '';
+      }
+    }
+    
+    return '';
+  };
+  
   const [projectData, setProjectData] = useState({
-    projeto_proj_nome,
+    projeto_proj_nome: extractProjectName(),
     description,
     startDate,
     endDate,
   });
-
-  useEffect(() => {
-    // Verifica se a função fetchProjectData está definida antes de chamá-la
-    if (typeof fetchProjectData === "function") {
-      fetchProjectData(id);
-    } else {
-      console.error("fetchProjectData não é uma função");
-    }
-  }, [id, fetchProjectData]);
-
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProjectData({ ...projectData, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    // Lógica de salvar alterações no projeto
-    console.log("Projeto atualizado:", projectData);
-    setIsModalOpen(false);
+  const showNotification = (message: string, success: boolean) => {
+    setPopupMessage(message);
+    setIsSuccess(success);
+    setShowPopup(true);
+    
+    setTimeout(() => {
+      setShowPopup(false);
+    }, 3000);
+  };
+
+  const handleSave = async () => {
+    try {
+      const formattedStartDate = projectData.startDate 
+        ? new Date(projectData.startDate + 'T12:00:00').toISOString().split('T')[0]
+        : '';
+      
+      const formattedEndDate = projectData.endDate 
+        ? new Date(projectData.endDate + 'T12:00:00').toISOString().split('T')[0]
+        : '';
+
+      const updateData = {
+        proj_nome: projectData.projeto_proj_nome,
+        proj_descricao: projectData.description,
+        proj_data_inicio: formattedStartDate,
+        proj_data_fim: formattedEndDate
+      };
+
+      await axios.put(
+        `http://localhost:3000/projeto/update/${id}`, 
+        updateData
+      );
+
+      showNotification("Projeto atualizado com sucesso!", true);
+      
+      setIsModalOpen(false);
+      
+      if (typeof fetchProjectData === 'function') {
+        fetchProjectData(id);
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar projeto:", error);
+
+      let errorMessage = "Erro ao atualizar projeto";
+      
+      if (axios.isAxiosError(error) && error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      showNotification(errorMessage, false);
+    }
   };
 
   const handleDelete = () => {
-    onDelete(id); // Chama a função de exclusão recebida via props
+    onDelete(id);
     setIsDeleteModalOpen(false);
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    return new Date(dateStr + 'T12:00:00').toLocaleDateString();
   };
 
   return (
     <>
-      <Card className="w-[300px] bg-gray-200  p-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative cursor-pointer">
+      <Popup 
+        isOpen={showPopup}
+        message={popupMessage}
+        isSuccess={isSuccess}
+        onClose={() => setShowPopup(false)}
+      />
+    
+      <Card className={`w-[300px] bg-gray-200 p-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative cursor-pointer ${className}`}>
         <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
           <Pencil
             size={16}
@@ -81,17 +173,19 @@ export default function Cards_Projects({
         </div>
 
         <CardContent className="p-0">
-          <h2 className="text-base font-semibold text-gray-900 line-clamp-1">{projectData.projeto_proj_nome}</h2>
-          <p className="text-xs text-gray-500 mt-1 line-clamp-2 h-10">{projectData.description}</p>
+          <h2 className="text-base font-semibold text-gray-900 line-clamp-1">
+            {projeto_proj_nome}
+          </h2>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-2 h-10">{description}</p>
           
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mt-3">
             <div className="flex -space-x-2">
               {users && users.length > 0 ? (
                 <>
                   {users.slice(0, 4).map((user, index) => (
                     <Avatar key={index} className="w-8 h-8 border-2 border-white rounded-full ring-2 ring-white">
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xs">
-                        {user[0]}
+                        {typeof user === 'string' ? user[0] : 'U'}
                       </AvatarFallback>
                     </Avatar>
                   ))}
@@ -107,15 +201,19 @@ export default function Cards_Projects({
             </div>
           </div>
 
-          {/* Barra de progresso */}
           <div className="mt-3 flex items-center space-x-2">
             <Progress value={progress} className="w-full h-2 bg-gray-300" />
             <span className="text-xs font-bold text-blue-700">{progress}%</span>
           </div>
+          
+          {startDate && (
+            <div className="mt-2 text-xs text-gray-500">
+              Início: {formatDate(startDate)}
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Modal de Edição */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
           <DialogHeader>
@@ -124,7 +222,7 @@ export default function Cards_Projects({
 
           <input
             type="text"
-            name="title"
+            name="projeto_proj_nome"
             value={projectData.projeto_proj_nome}
             onChange={handleChange}
             className="w-full border p-2 rounded-md text-lg font-bold"
@@ -134,11 +232,11 @@ export default function Cards_Projects({
             name="description"
             value={projectData.description}
             onChange={handleChange}
-            className="w-full border p-2 rounded-md"
+            className="w-full border p-2 rounded-md mt-4"
             rows={3}
           />
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Data de Início:</label>
               <Input
@@ -162,7 +260,7 @@ export default function Cards_Projects({
           </div>
 
           <Button
-            className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer"
+            className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer mt-4"
             onClick={handleSave}
           >
             Salvar
@@ -170,21 +268,20 @@ export default function Cards_Projects({
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Exclusão */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="text-2xl font-bold tracking-tight text-center mb-6">
+        <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-md w-full">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Tem certeza que deseja excluir o projeto?</DialogTitle>
+            <DialogTitle className="text-xl font-bold tracking-tight text-center mb-4">Tem certeza que deseja excluir o projeto?</DialogTitle>
           </DialogHeader>
 
-          <div className="mt-3 pl-1">
+          <div className="mt-2 pl-1">
             <div className="flex items-center text-sm text-red-700">
               <AlertTriangle size={16} className="mr-2" />
               <p>Todos os dados associados a este projeto serão removidos.</p>
             </div>
           </div>
 
-          <div className="p-5 bg-gray-50 flex flex-col sm:flex-row gap-3 sm:justify-center">
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-center">
             <Button
               variant="outline"
               className="border-gray-300 hover:bg-gray-100 hover:text-gray-800 transition-colors cursor-pointer"
