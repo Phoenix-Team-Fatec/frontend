@@ -1,36 +1,52 @@
 "use client";
 import { useState, useEffect, ChangeEvent } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Label } from "../ui/label";
+import { useUser } from "@/hook/UserData";
 
 export default function ProjectRegistration({
-  open, 
-  setOpen, 
+  open,
+  setOpen,
   onProjectCreated
-}: { 
-  open: boolean; 
-  setOpen: (value: boolean) => void; 
-  onProjectCreated: (newProjectData: any) => void; // Função para notificar a criação do projeto com dados
+}: {
+  open: boolean;
+  setOpen: (value: boolean) => void;
+  onProjectCreated: (newProjectData: any) => void;
 }) {
+  const userDataHook = useUser()
+
   const [title, setTitle] = useState("");
-  const [responsibles, setResponsibles] = useState<string[]>([]); 
+  const [responsibles, setResponsibles] = useState<
+    { email: string; user_id?: number }[]
+  >([]);
+  const [responsibleInput, setResponsibleInput] = useState("");
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
-  const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);
-  const [endDate, setEndDate] = useState("")
+  const [availableUsers, setAvailableUsers] = useState<
+    { user_id: number; name: string; email: string; user_foto: string; }[]
+  >([]);
+  const [endDate, setEndDate] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const { data } = await axios.get("http://localhost:3000/usuarios");
 
+        // Supondo que a API retorne user_email
         const formattedUsuario = data.map((user: any) => ({
-          id: user.user_id.toString(),
+          user_id: user.user_id,
           name: `${user.user_nome} ${user.user_sobrenome ?? ""}`.trim(),
+          email: user.user_email,
+          user_foto: user.user_foto
         }));
 
         setAvailableUsers(formattedUsuario);
@@ -41,57 +57,188 @@ export default function ProjectRegistration({
     fetchUsers();
   }, []);
 
-  const handleResponsibleChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-    setResponsibles(selectedOptions);
+  useEffect(() => {
+    if (userDataHook && userDataHook.user_email && userDataHook.user_id) {
+      setResponsibles((prev) => {
+        if (prev.find((r) => r.email === userDataHook.user_email)) {
+          return prev;
+        }
+        return [{ email: userDataHook.user_email, user_id: userDataHook.user_id, isCreator: true }, ...prev];
+      });
+    }
+  }, [userDataHook]);
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const handleAddResponsible = () => {
+    const email = responsibleInput.trim();
+    if (email !== "" && emailRegex.test(email)) {
+      // Verifica se já existe
+      if (responsibles.some((r) => r.email === email)) return;
+
+      const userMatch = availableUsers.find((u) => u.email === email);
+      setResponsibles([
+        ...responsibles,
+        { email, user_id: userMatch?.user_id }
+      ]);
+      setResponsibleInput("");
+    } else {
+      alert("Por favor, insira um email válido.");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddResponsible();
+    }
+  };
+
+  const handleRemoveResponsible = (index: number) => {
+    if (responsibles[index].email === userDataHook.user_email) return;
+    setResponsibles(responsibles.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const projectData = { title, responsibles, area, description };
     console.log("Enviando dados do projeto:", projectData);
-
-    // Chama a função para adicionar o novo projeto
-    onProjectCreated(projectData); 
-
-    setOpen(false); // Fecha o modal após a criação
+    onProjectCreated(projectData);
+    setOpen(false);
   };
 
   return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
-          <DialogHeader>
-            <DialogTitle className="text-3xl font-bold tracking-tighter text-center space-y-2">Cadastro de projeto</DialogTitle>
-          </DialogHeader>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+        <DialogHeader>
+          <DialogTitle className="text-3xl font-bold tracking-tighter text-center mb-4">
+            Cadastro de projeto
+          </DialogTitle>
+        </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Título</Label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <Label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+              Título
+            </Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="responsible" className="block text-sm font-medium text-gray-700 mb-1">
+              Responsáveis
+            </Label>
+            <div className="flex">
+              <Input
+                id="responsible"
+                type="email"
+                placeholder="teste@example.com"
+                value={responsibleInput}
+                onChange={(e) => setResponsibleInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="flex-1 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-blue-500"
+              />
+              <Button
+                type="button"
+                onClick={handleAddResponsible}
+                className="ml-2 px-4 rounded-r-md bg-blue-600 text-white hover:bg-blue-700 transition"
+              >
+                Adicionar
+              </Button>
             </div>
 
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700">Responsáveis</label>
-              <select
-                multiple
-                value={responsibles}
-                onChange={handleResponsibleChange}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {availableUsers.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
-            </div> */}
+            {responsibles.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {responsibles.map((userData, index) => {
+                  // Busca detalhes do usuário se existir
+                  const userDetails = availableUsers.find((user) => user.email === userData.email);
+                  const isCreator = userData.email === userDataHook.user_email;
+                  return (
+                    <div
+                      key={index}
+                      className="relative flex items-center bg-gray-100 border border-gray-200 rounded-full shadow-sm transition hover:shadow-md px-3 py-1"
+                    >
+                      {/* Label menor com hover controlando tooltip e botão */}
+                      <div className="group relative flex items-center cursor-default">
+                        {/* Avatar ou inicial */}
+                        <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 overflow-hidden">
+                          {userDetails?.user_foto ? (
+                            <>
+                              <img
+                                src={userDetails.user_foto}
+                                alt="Foto do usuário"
+                                className={`w-5 h-5 rounded-full block ${!isCreator ? "group-hover:hidden" : ""}`}
+                              />
+                              {!isCreator && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveResponsible(index)}
+                                  className="hidden group-hover:block w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 cursor-pointer"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <div
+                                className={`w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-700  ${!isCreator ? "group-hover:hidden" : ""}`}>
+                                {userData.email.charAt(0).toUpperCase()}
+                              </div>
+                              {!isCreator && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveResponsible(index)}
+                                  className="hidden group-hover:block w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 cursor-pointer"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
 
-            {/* <div>
+                        {/* Email */}
+                        <span className="ml-2 text-sm text-gray-800">{userData.email}</span>
+
+                        {/* Tooltip (detalhes) */}
+                        <div className="absolute left-0 top-full mt-1 w-max p-2 bg-white border border-gray-300 rounded shadow-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-20">
+                          {userDetails ? (
+                            <div className="text-xs text-gray-600">
+                              <img
+                                src={userDetails.user_foto}
+                                alt="Foto do usuário"
+                                className="w-10 h-10 rounded-full mb-1"
+                              />
+                              <p><strong>Nome:</strong> {userDetails.name}</p>
+                              <p><strong>Email:</strong> {userDetails.email}</p>
+                            </div>
+                          ) : (
+                            <div className="text-xs text-gray-600">
+                              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 mb-1">
+                                {userData.email.charAt(0).toUpperCase()}
+                              </div>
+                              <p><strong>Usuário não cadastrado</strong></p>
+                              <p>{userData.email}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* <div>
               <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
               <Input
                 value={area}
@@ -101,16 +248,16 @@ export default function ProjectRegistration({
               />
             </div> */}
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Descrição</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
 
-            {/* <div>
+          {/* <div>
               <label className="block text-sm font-medium text-gray-700">Data fim do projeto (dd/mm/yyyy)</label>
               <Textarea
                 value={endDate}
@@ -118,23 +265,25 @@ export default function ProjectRegistration({
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div> */}
-            <div className="flex justify-center space-x-2 w-full">
-              <Button
-                onClick={() => setOpen(false)}
-                variant="outline"
-                className="flex-1 text-[#355EAF] border border-[#355EAF] hover:text-[#2d4f95] cursor-pointer"
-                >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] cursor-pointer"
-              >
-                Cadastrar projeto
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+
+          <div className="flex justify-end space-x-4">
+            <Button
+              type="button"
+              onClick={() => setOpen(false)}
+              variant="outline"
+              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            >
+              Cadastrar projeto
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
