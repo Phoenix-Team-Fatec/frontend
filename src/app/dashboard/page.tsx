@@ -14,13 +14,15 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getUserData } from "@/utils/auth";
 
+
 export default function Dashboard() {
   const router = useRouter();
+  const userData = getUserData();
   const [authChecked, setAuthChecked] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userId, setUserId] = useState(3);
+  const [userId, setUserId] = useState(userData.user_id);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
@@ -30,9 +32,14 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  
+
 
   useEffect(() => {
-    const userData = getUserData();
+    
+
+    console.log()
+
     if (!userData) {
       router.push('/sign-in');
     } else {
@@ -60,6 +67,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!projects || projects.length === 0) {
       setFilteredProjects([]);
+      
       return;
     }
 
@@ -129,7 +137,7 @@ export default function Dashboard() {
 
       try {
         const relUserProj_data = {
-          user_id: 3,
+          user_id: userId,
           proj_id: Number(projId),
           coordenador: true,
         };
