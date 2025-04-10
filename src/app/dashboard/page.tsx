@@ -135,9 +135,7 @@ export default function Dashboard() {
           user_email: user.email,
           user_id: user?.user_id,
         };
-        console.log(relUserProj_data)
-        const response_relUserProj = await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
-        console.log(response_relUserProj.data);
+        await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
       }
 
       showNotification("Projeto criado com sucesso!", true);
