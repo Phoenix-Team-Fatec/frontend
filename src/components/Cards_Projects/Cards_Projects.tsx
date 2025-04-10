@@ -152,9 +152,21 @@ export default function Cards_Projects({
     setIsDeleteModalOpen(false);
   };
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return '';
-    return new Date(dateStr + 'T12:00:00').toLocaleDateString();
+  const formatDate = (dateStr: string) => { 
+    try {
+      // Primeiro tenta parsear sem adicionar hora
+      const date = new Date(dateStr);
+      
+      // Se a data for inválida, tenta com o timezone
+      if (isNaN(date.getTime())) {
+        return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
+      }
+      
+      return date.toLocaleDateString('pt-BR');
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return 'Data inválida';
+    }
   };
 
   return (
@@ -218,9 +230,18 @@ export default function Cards_Projects({
             <span className="text-xs font-bold text-blue-700">{progress}%</span>
           </div>
           
-          {startDate && (
-            <div className="mt-2 text-xs text-gray-500">
-              Início: {formatDate(startDate)}
+          {(startDate || endDate) && (
+            <div className="mt-2 flex gap-4 text-xs text-gray-500">
+              {startDate && (
+                <div>
+                  Início: {formatDate(startDate)}
+                </div>
+              )}
+              {endDate && (
+                <div>
+                  Conclusão: {formatDate(endDate)}
+                </div>
+              )}
             </div>
           )}
         </CardContent>

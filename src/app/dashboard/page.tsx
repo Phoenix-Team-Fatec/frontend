@@ -20,6 +20,9 @@ export default function Dashboard() {
   const userData = getUserData();
   const [authChecked, setAuthChecked] = useState(false);
   const [projects, setProjects] = useState<any[]>([]);
+  const [coordProjects, setCoordProjects] = useState<any[]>([]);
+  const [notCoordProjects, setNotCoordProjects] = useState<any[]>([]);
+  const [excludedProjects, setExcludedProjects] = useState<any[]>([]);  
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userId, setUserId] = useState(userData.user_id);
@@ -44,6 +47,7 @@ export default function Dashboard() {
       router.push('/sign-in');
     } else {
       setAuthChecked(true);
+      setUserId(Number(userData.user_id))
     }
   }, [router]);
 
@@ -55,6 +59,32 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjs/${userId}`);
+      
+      const projetos = Array.isArray(data) ? data : [];
+    
+      
+      const coordProjs = projetos.filter(projeto => 
+        projeto.is_coordenador === true && projeto.projeto_proj_excluido === false
+      );
+      
+      const notCoordProjs = projetos.filter(projeto => 
+        projeto.is_coordenador === false && projeto.projeto_proj_excluido === false
+      );
+      
+      const exclProjs = projetos.filter(projeto => 
+        projeto.projeto_proj_excluido === true
+      );
+      
+      // Atualiza os estados
+      setProjects(projetos);
+      setCoordProjects(coordProjs);
+      setNotCoordProjects(notCoordProjs);
+      setExcludedProjects(exclProjs);
+
+      console.log(coordProjects)
+      console.log(notCoordProjects)
+      console.log(excludedProjects)
+
       setProjects(data);
     } catch (error) {
       console.log("Error fetching projects", error);
@@ -124,11 +154,13 @@ export default function Dashboard() {
     }, 3000);
   };
 
-  const handleProjectCreation = async (newProjectData: { title: string; responsibles: string; area: string; description: string }) => {
+  const handleProjectCreation = async (newProjectData: { title: string; responsibles: string; area: string; description: string, startDate: string, endDate: string }) => {
     const data = {
       proj_nome: newProjectData.title,
       proj_descricao: newProjectData.description,
       proj_area_atuacao: newProjectData.area,
+      proj_data_inicio: newProjectData.startDate,
+      proj_data_fim: newProjectData.endDate
     };
 
     try {
@@ -160,7 +192,8 @@ export default function Dashboard() {
 
   const handleDelete = async (id: number) => {
     try {
-      const response = await axios.delete(`http://localhost:3000/projeto/delete/${id}`);
+      //deixar put pois no backend apenas altera um campo
+      const response = await axios.put(`http://localhost:3000/projeto/delete/${id}`);
       fetchProjetos();
       showNotification("Projeto excluído com sucesso!", true);
     } catch (error) {

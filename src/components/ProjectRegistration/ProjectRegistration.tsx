@@ -21,6 +21,7 @@ export default function ProjectRegistration({
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
   const [availableUsers, setAvailableUsers] = useState<{ id: string; name: string }[]>([]);
+  const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState("")
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function ProjectRegistration({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const projectData = { title, responsibles, area, description };
+    const projectData = { title, responsibles, area, description, startDate, endDate };
     console.log("Enviando dados do projeto:", projectData);
 
     // Chama a função para adicionar o novo projeto
@@ -75,7 +76,7 @@ export default function ProjectRegistration({
                 />
             </div>
 
-            {/* <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Responsáveis</label>
               <select
                 multiple
@@ -89,9 +90,9 @@ export default function ProjectRegistration({
                   </option>
                 ))}
               </select>
-            </div> */}
+            </div>
 
-            {/* <div>
+            <div>
               <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
               <Input
                 value={area}
@@ -99,7 +100,7 @@ export default function ProjectRegistration({
                 required
                 className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div> */}
+            </div>
 
             <div className="space-y-2">
               <Label htmlFor="description">Descrição</Label>
@@ -110,14 +111,29 @@ export default function ProjectRegistration({
               />
             </div>
 
-            {/* <div>
-              <label className="block text-sm font-medium text-gray-700">Data fim do projeto (dd/mm/yyyy)</label>
-              <Textarea
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div> */}
+            <div className="flex justify-between text-sm text-gray-500">
+              <div>
+                <label>Início:</label>
+                <input 
+                  type="date" 
+                  name="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border p-1 rounded-md"
+                />
+              </div>
+              <div>
+                <label>Fim:</label>
+                <input 
+                  type="date" 
+                  name="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border p-1 rounded-md"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-center space-x-2 w-full">
               <Button
                 onClick={() => setOpen(false)}
