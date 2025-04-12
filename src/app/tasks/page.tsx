@@ -10,6 +10,9 @@ import Popup from "@/components/Feedback/popup";
 import axios from 'axios';
 import { useRouter, useSearchParams } from "next/navigation";
 import { getUserData } from "@/utils/auth";
+import { Trash2, Pen } from "lucide-react";
+import { Progress } from "@/components/ui/progress"
+
 
 interface Tarefa {
   tarefa_id: number;
@@ -270,29 +273,76 @@ const ProjectTasks = () => {
                 {stage.etapa_descricao && (
                   <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
                 )}
-
+                
                 <Button 
                   onClick={() => setSelectedStage(stage.etapa_id)} 
                   className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4 cursor-pointer"
                 >
-                  + Adicionar Tarefa
+                + Adicionar Tarefa
                 </Button>
+
+                {/* Barra de progresso da etapa */}
+                {stage.tarefas && stage.tarefas.length > 0 && (
+                <div className="mb-4">
+                    {(() => {
+                      const totalTarefas = stage.tarefas?.length || 0;
+                      const tarefasConcluidas = stage.tarefas?.filter(t => t.tarefa_status)?.length || 0;
+                      const percentual = Math.round((tarefasConcluidas / totalTarefas) * 100);
+              return (
+              <div>
+                <p className="text-sm text-gray-600 mb-1">
+                  Progresso: {percentual}%
+                </p>
+                <Progress value={percentual} className="h-2 bg-gray-200" />
+              </div>
+      );
+                })()}
+            </div>
+          )}
+
 
                 <div className="space-y-3 flex-grow overflow-y-auto max-h-[50vh]">
                   {(stage.tarefas || []).map((task) => (
                     <Card key={task.tarefa_id} className="border border-gray-200 hover:shadow-md transition-shadow duration-200">
-                      <CardContent className="p-4">
-                        <p className="font-medium text-gray-800 mb-1">{task.tarefa_nome}</p>
-                        <p className="text-gray-600 text-sm mb-2">{task.tarefa_descricao}</p>
-                        <div className="text-xs text-gray-500 space-y-1">
-                          <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
-                          <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div>
+                    <CardContent className="p-4">
+                      {/* Título e ícones lado a lado */}
+                      <div className="flex justify-between items-start mb-1">
+                        <p className="font-medium text-gray-800">{task.tarefa_nome}</p>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-blue-600 hover:text-blue-800 p-0" 
+                            onClick={() => console.log("Editar tarefa", task.tarefa_id)}
+                          >
+                            <Pen size={16} />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-600 hover:text-red-800 p-0" 
+                            onClick={() => console.log("Excluir tarefa", task.tarefa_id)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </div>
-                        <div className={`text-xs mt-2 font-medium py-1 px-2 rounded-full inline-block ${task.tarefa_status ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
-                          {task.tarefa_status ? "Concluída" : "Pendente"}
-                        </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                  
+                      {/* Descrição e datas */}
+                      <p className="text-gray-600 text-sm mb-2">{task.tarefa_descricao}</p>
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
+                        <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div>
+                      </div>
+                  
+                      {/* Status */}
+                      <div className={`text-xs mt-2 font-medium py-1 px-2 rounded-full inline-block ${task.tarefa_status ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"}`}>
+                        {task.tarefa_status ? "Concluída" : "Pendente"}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  
                   ))}
                 </div>
               </div>
