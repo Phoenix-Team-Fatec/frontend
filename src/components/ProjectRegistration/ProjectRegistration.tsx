@@ -184,25 +184,17 @@ export default function ProjectRegistration({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+      <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-2xl w-[90vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-3xl font-bold tracking-tighter text-center mb-4">
+          <DialogTitle className="text-2xl font-bold tracking-tighter text-center">
             Cadastro de projeto
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-              Título
-            </Label>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Título</Label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
 
           <div>
