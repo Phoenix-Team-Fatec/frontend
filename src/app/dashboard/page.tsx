@@ -13,9 +13,11 @@ import Cards_Projects from "@/components/Cards_Projects/Cards_Projects";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getUserData } from "@/utils/auth";
+import { useUser } from "@/hook/UserData";
 
 
 export default function Dashboard() {
+  const userDataHook = useUser()
   const router = useRouter();
   const userData = getUserData();
   const [authChecked, setAuthChecked] = useState(false);
@@ -106,8 +108,8 @@ export default function Dashboard() {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       result = result.filter(
-        project => 
-          project.projeto_proj_nome.toLowerCase().includes(term) || 
+        project =>
+          project.projeto_proj_nome.toLowerCase().includes(term) ||
           (project.projeto_proj_descricao && project.projeto_proj_descricao.toLowerCase().includes(term))
       );
     }
@@ -132,13 +134,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    
+
     if (loading) {
       timer = setTimeout(() => {
         setLoading(false);
       }, 1000);
     }
-    
+
     return () => {
       if (timer) clearTimeout(timer);
     };
@@ -148,13 +150,13 @@ export default function Dashboard() {
     setPopupMessage(message);
     setIsSuccess(success);
     setShowPopup(true);
-    
+
     setTimeout(() => {
       setShowPopup(false);
     }, 3000);
   };
 
-  const handleProjectCreation = async (newProjectData: { title: string; responsibles: string; area: string; description: string, startDate: string, endDate: string }) => {
+  const handleProjectCreation = async (newProjectData: { title: string; responsibles: { email: string; user_id?: number }[]; area: string; description: string, startDate: string, endDate: string }) => {
     const data = {
       proj_nome: newProjectData.title,
       proj_descricao: newProjectData.description,
@@ -167,23 +169,20 @@ export default function Dashboard() {
       const response = await axios.post(`http://localhost:3000/projeto`, data);
       const projId = response.data.proj_id;
 
-      try {
+      for (const user of newProjectData.responsibles) {
         const relUserProj_data = {
           user_id: userId,
           proj_id: Number(projId),
-          coordenador: true,
+          coordenador: user.user_id === userDataHook.user_id,
+          user_email: user.email,
         };
-        const response_relUserProj = await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
-        console.log(response_relUserProj.data);
-        
-        showNotification("Projeto criado com sucesso!", true);
-      } catch (error) {
-        console.error("Erro ao criar relUserProj", error);
-        showNotification("Erro ao associar usuário ao projeto", false);
+        await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
       }
+
+      showNotification("Projeto criado com sucesso!", true);
     } catch (error) {
-      console.error("Erro ao criar projeto", error);
-      showNotification("Erro ao criar projeto", false);
+      console.error("Erro ao criar relUserProj", error);
+      showNotification("Erro ao associar usuário ao projeto", false);
     }
 
     fetchProjetos();
@@ -239,20 +238,20 @@ export default function Dashboard() {
   return (
     <div className="flex">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
-      <Popup 
+
+      <Popup
         isOpen={showPopup}
         message={popupMessage}
         isSuccess={isSuccess}
         onClose={() => setShowPopup(false)}
       />
-      
+
       <SimpleAIChat />
-      
+
       <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
-          
+
           <div className="flex flex-1 md:flex-none md:flex-row items-center gap-2 max-w-full md:max-w-[70%]">
             <div className="relative flex-1 md:w-[250px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -264,7 +263,7 @@ export default function Dashboard() {
                 className="pl-10 h-9 w-full border-gray-300"
               />
               {searchTerm && (
-                <button 
+                <button
                   onClick={() => setSearchTerm("")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
@@ -272,7 +271,7 @@ export default function Dashboard() {
                 </button>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Filter size={18} className="text-gray-500" />
               <select
@@ -286,10 +285,10 @@ export default function Dashboard() {
                 <option value="not-started">Não Iniciados</option>
               </select>
             </div>
-            
+
             {(searchTerm || statusFilter !== "all") && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={clearFilters}
                 className="h-9 px-2 text-gray-500 text-sm"
               >
@@ -298,7 +297,7 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-        
+
         <div className="pr-8">
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
@@ -312,7 +311,7 @@ export default function Dashboard() {
             )}
           </div>
         )}
-        
+
         {loading ? (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
             <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
@@ -337,8 +336,8 @@ export default function Dashboard() {
                 className="w-[250px] h-[250px] object-contain opacity-70 mx-auto"
               />
               <p className="text-gray-500 text-lg font-light mt-4">Nenhum projeto corresponde aos filtros aplicados</p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={clearFilters}
                 className="mt-4"
               >
@@ -352,7 +351,7 @@ export default function Dashboard() {
               {filteredProjects.map((project) => (
                 <div key={project.projeto_proj_id} className="w-full max-w-[220px]">
                   <Cards_Projects
-                    id={project.projeto_proj_id} 
+                    id={project.projeto_proj_id}
                     projeto_proj_nome={
                       <Link
                         href={`/tasks?projectId=${project.projeto_proj_id}`}
@@ -366,7 +365,7 @@ export default function Dashboard() {
                     endDate={project.projeto_proj_data_fim || ""}
                     progress={project.projeto_proj_status || 0}
                     users={project.users || []}
-                    onDelete={() => handleDelete(project.projeto_proj_id)} 
+                    onDelete={() => handleDelete(project.projeto_proj_id)}
                     fetchProjectData={fetchProjetos}
                     onNotify={showNotification}
                     className="hover:shadow-lg transition-shadow duration-300"
@@ -376,14 +375,14 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-  
+
         <Button
           onClick={addCard}
           className="fixed bottom-8 right-8 w-16 h-16 rounded-full bg-[#355EAF] text-white flex items-center justify-center shadow-xl hover:bg-[#2C4B8B] hover:scale-105 transition-all duration-300 cursor-pointer"
         >
           <Plus size={28} className="stroke-[3]" />
         </Button>
-  
+
         <ProjectRegistration open={isModalOpen} setOpen={setIsModalOpen} onProjectCreated={handleProjectCreation} />
       </div>
     </div>
