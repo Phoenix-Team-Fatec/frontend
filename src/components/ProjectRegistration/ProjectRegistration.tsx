@@ -197,6 +197,7 @@ export default function ProjectRegistration({
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
 
+
           <div>
             <Label htmlFor="responsible" className="block text-sm font-medium text-gray-700 mb-1">
               Responsáveis
