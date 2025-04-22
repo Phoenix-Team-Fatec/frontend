@@ -529,7 +529,7 @@ const ProjectTasks = () => {
                   <div className="flex justify-between items-center">
                     {isEditing ? (
                       <input
-                        value={editableTask.tarefa_nome}
+                        value={editableTask.tarefa_id}
                         onChange={(e) => setEditableTask({
                           ...editableTask,
                           tarefa_nome: e.target.value
@@ -553,24 +553,7 @@ const ProjectTasks = () => {
                         </Button>
                       ) : (
                         <>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setIsEditing(false);
-                              setEditableTask(selectedTask ? {...selectedTask} : null);
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button 
-                            variant="default"
-                            size="sm"
-                            onClick={saveTaskChanges}
-                          >
-                            <Save size={16} className="mr-2" />
-                            Salvar
-                          </Button>
+                          
                         </>
                       )}
                     </div>
