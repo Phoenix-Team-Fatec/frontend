@@ -14,6 +14,14 @@ import { Label } from "../ui/label";
 import { Trash2, Check } from "lucide-react";
 import { useUser } from "@/hook/UserData";
 
+/**
+ * Componente ProjectRegistration - Modal para cadastro de novos projetos
+ * 
+ * Props:
+ * - open: boolean - Controla a visibilidade do modal
+ * - setOpen: function - Alterna a visibilidade do modal
+ * - onProjectCreated: function - Callback quando o projeto é criado com sucesso
+ */
 export default function ProjectRegistration({
   open,
   setOpen,
@@ -23,8 +31,10 @@ export default function ProjectRegistration({
   setOpen: (value: boolean) => void;
   onProjectCreated: (newProjectData: any) => void;
 }) {
-  const userDataHook = useUser()
+  // Obtém os dados do usuário atual
+  const userDataHook = useUser();
 
+  // Estados do formulário
   const [title, setTitle] = useState("");
   const [responsibles, setResponsibles] = useState<
     { email: string; user_id?: number }[]
@@ -33,19 +43,19 @@ export default function ProjectRegistration({
   const [area, setArea] = useState("");
   const [description, setDescription] = useState("");
   const [availableUsers, setAvailableUsers] = useState<
-    { user_id: number; name: string; email: string; user_foto: string; }[]
+    { user_id: number; name: string; email: string; user_foto: string }[]
   >([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
+  // Estados para áreas e instituições
   const [areasList, setAreasList] = useState<string[]>([]);
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]); // Áreas selecionadas para este projeto
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [partnerInstitutions, setPartnerInstitutions] = useState<string[]>([]);
   const [fundingInstitutions, setFundingInstitutions] = useState<string[]>([]);
   const [projectValue, setProjectValue] = useState("");
 
-  // Simulação de áreas já cadastradas no banco de dados
-  // Na implementação com o back ira vir de uma chamada API
+  // Áreas pré-cadastradas (simulando banco de dados)
   const [storedAreas, setStoredAreas] = useState<string[]>([
     "Saúde Pública",
     "Educação",
@@ -53,12 +63,16 @@ export default function ProjectRegistration({
     "Meio Ambiente"
   ]);
 
+  // Expressão regular para validação de e-mail
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // Busca os usuários disponíveis ao carregar o componente
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const { data } = await axios.get("http://localhost:3000/usuarios");
 
-        // Supondo que a API retorne user_email
+        // Formata os dados dos usuários
         const formattedUsuario = data.map((user: any) => ({
           user_id: user.user_id,
           name: `${user.user_nome} ${user.user_sobrenome ?? ""}`.trim(),
@@ -74,6 +88,7 @@ export default function ProjectRegistration({
     fetchUsers();
   }, []);
 
+  // Adiciona o usuário atual como responsável
   useEffect(() => {
     if (userDataHook && userDataHook.user_email && userDataHook.user_id) {
       setResponsibles((prev) => {
@@ -85,8 +100,9 @@ export default function ProjectRegistration({
     }
   }, [userDataHook]);
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+  /**
+   * Adiciona um responsável ao projeto
+   */
   const handleAddResponsible = () => {
     const email = responsibleInput.trim();
     if (email !== "" && emailRegex.test(email)) {
@@ -104,6 +120,9 @@ export default function ProjectRegistration({
     }
   };
 
+  /**
+   * Adiciona responsável ao pressionar Enter
+   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -111,27 +130,36 @@ export default function ProjectRegistration({
     }
   };
 
+  /**
+   * Remove um responsável da lista
+   */
   const handleRemoveResponsible = (index: number) => {
     if (responsibles[index].email === userDataHook.user_email) return;
     setResponsibles(responsibles.filter((_, i) => i !== index));
   };
 
+  /**
+   * Adiciona uma nova área de atuação
+   */
   const addArea = () => {
     if (area && !areasList.includes(area)) {
       setAreasList([...areasList, area]);
-      // Simulação: add também às áreas armazenadas no "banco de dados"
-      // Na implementação com o back, isso seria uma chamada API POST para salvar a nova área
       setStoredAreas(prev => [...prev, area]);
       setArea("");
     }
   };
 
+  /**
+   * Remove uma área da lista
+   */
   const removeArea = (areaToRemove: string) => {
     setAreasList(areasList.filter((a) => a !== areaToRemove));
-    // Remove também das selecionadas, se estiver lá
     setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove));
   };
 
+  /**
+   * Alterna a seleção de uma área
+   */
   const toggleAreaSelection = (area: string) => {
     if (selectedAreas.includes(area)) {
       setSelectedAreas(selectedAreas.filter(a => a !== area));
@@ -140,6 +168,32 @@ export default function ProjectRegistration({
     }
   };
 
+  /**
+   * Limpa todos os campos do formulário
+   */
+  const resetForm = () => {
+    setTitle("");
+    setResponsibles([]);
+    setResponsibleInput("");
+    setArea("");
+    setDescription("");
+    setStartDate("");
+    setEndDate("");
+    setAreasList([]);
+    setSelectedAreas([]);
+    setPartnerInstitutions([]);
+    setFundingInstitutions([]);
+    setProjectValue("");
+    
+    // Re-adiciona o usuário atual como responsável
+    if (userDataHook && userDataHook.user_email && userDataHook.user_id) {
+      setResponsibles([{ email: userDataHook.user_email, user_id: userDataHook.user_id, isCreator: true }]);
+    }
+  };
+
+  /**
+   * Envia os dados do formulário
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -149,18 +203,23 @@ export default function ProjectRegistration({
       description,
       startDate,
       endDate,
-      selectedAreas, // Agora usamos as áreas selecionadas
+      selectedAreas,
       partnerInstitutions,
       fundingInstitutions,
       projectValue,
     };
 
     console.log("Enviando dados do projeto:", projectData);
-    // Futuro envio para backend vao ser algo : await axios.post('/projetos', projectData);
     onProjectCreated(projectData);
+    
+    // Limpa o formulário após o cadastro
+    resetForm();
     setOpen(false);
   };
 
+  /**
+   * Adiciona uma instituição à lista
+   */
   const handleInstitutionInput = (
     e: ChangeEvent<HTMLInputElement>,
     setList: React.Dispatch<React.SetStateAction<string[]>>,
@@ -174,6 +233,9 @@ export default function ProjectRegistration({
     }
   };
 
+  /**
+   * Remove uma instituição da lista
+   */
   const removeInstitution = (
     institution: string,
     setList: React.Dispatch<React.SetStateAction<string[]>>,
@@ -192,12 +254,17 @@ export default function ProjectRegistration({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Campo Título */}
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+            <Input 
+              value={title} 
+              onChange={(e) => setTitle(e.target.value)} 
+              required 
+            />
           </div>
 
-
+          {/* Campo Responsáveis */}
           <div>
             <Label htmlFor="responsible" className="block text-sm font-medium text-gray-700 mb-1">
               Responsáveis
@@ -221,10 +288,10 @@ export default function ProjectRegistration({
               </Button>
             </div>
 
+            {/* Lista de Responsáveis */}
             {responsibles.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {responsibles.map((userData, index) => {
-                  // Busca detalhes do usuário se existir
                   const userDetails = availableUsers.find((user) => user.email === userData.email);
                   const isCreator = userData.email === userDataHook.user_email;
                   return (
@@ -232,7 +299,6 @@ export default function ProjectRegistration({
                       key={index}
                       className="relative flex items-center bg-gray-100 border border-gray-200 rounded-full shadow-sm transition hover:shadow-md px-3 py-1"
                     >
-                      {/* Label menor com hover controlando tooltip e botão */}
                       <div className="group relative flex items-center cursor-default">
                         {/* Avatar ou inicial */}
                         <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 overflow-hidden">
@@ -275,7 +341,7 @@ export default function ProjectRegistration({
                         {/* Email */}
                         <span className="ml-2 text-sm text-gray-800">{userData.email}</span>
 
-                        {/* Tooltip (detalhes) */}
+                        {/* Tooltip com detalhes */}
                         <div className="absolute left-0 top-full mt-1 w-max p-2 bg-white border border-gray-300 rounded shadow-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-20">
                           {userDetails ? (
                             <div className="text-xs text-gray-600">
@@ -299,32 +365,13 @@ export default function ProjectRegistration({
                         </div>
                       </div>
                     </div>
-
                   );
                 })}
               </div>
             )}
           </div>
 
-          {/* <div>
-              <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
-              <Input
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
-                className="flex-1"
-                placeholder="Digite uma nova área"
-              />
-              <Button 
-                type="button" 
-                onClick={addArea}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Adicionar
-              </Button>
-            </div>
-          </div>
-
-          {/* Áreas já cadastradas (simulando busca no banco de dados) */}
+          {/* Áreas de atuação */}
           <div className="space-y-2">
             <Label>Áreas disponíveis</Label>
             <div className="flex flex-wrap gap-2">
@@ -349,7 +396,7 @@ export default function ProjectRegistration({
             )}
           </div>
 
-          {/* Áreas cadastradas durante a sessão atual  */}
+          {/* Áreas cadastradas nesta sessão */}
           {areasList.length > 0 && (
             <div className="space-y-1">
               <Label>Áreas cadastradas nesta sessão</Label>
@@ -371,6 +418,7 @@ export default function ProjectRegistration({
             </div>
           )}
 
+          {/* Campo Descrição */}
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Textarea
@@ -381,6 +429,7 @@ export default function ProjectRegistration({
             />
           </div>
 
+          {/* Instituições Parceiras */}
           <div>
             <Label>Instituições Parceiras (máx. 5)</Label>
             <Input
@@ -415,6 +464,7 @@ export default function ProjectRegistration({
             )}
           </div>
 
+          {/* Instituições Financiadoras */}
           <div>
             <Label>Instituições Financiadoras (máx. 3)</Label>
             <Input
@@ -449,6 +499,7 @@ export default function ProjectRegistration({
             )}
           </div>
 
+          {/* Valor do Projeto */}
           <div className="space-y-2">
             <Label>Valor total do Projeto</Label>
             <Input
@@ -459,6 +510,7 @@ export default function ProjectRegistration({
             />
           </div>
 
+          {/* Datas do Projeto */}
           <div className="flex justify-between text-sm text-gray-500">
             <div>
               <label>Início:</label>
@@ -482,10 +534,14 @@ export default function ProjectRegistration({
             </div>
           </div>
 
+          {/* Botões de ação */}
           <div className="flex justify-end space-x-4">
             <Button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => {
+                resetForm();
+                setOpen(false);
+              }}
               variant="outline"
               className="px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition"
             >
@@ -498,8 +554,8 @@ export default function ProjectRegistration({
               Cadastrar projeto
             </Button>
           </div>
-        </form >
-      </DialogContent >
-    </Dialog >
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
