@@ -360,7 +360,8 @@ const ProjectTasks = () => {
     
     try {
       setLoading(true);
-      const response = await axios.put(`http://localhost:3000/tarefa/${editableTask.tarefa_id}`, {
+      const response = await axios.put(`http://localhost:3000/tarefa/`, {
+        id: editableTask.tarefa_id,
         nome: editableTask.tarefa_nome,
         descricao: editableTask.tarefa_descricao,
         data_inicio: editableTask.tarefa_data_inicio,
@@ -391,7 +392,7 @@ const ProjectTasks = () => {
   const deleteTask = async (taskId: number) => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:3000/tarefa/${taskId}`);
+      await axios.delete(`http://localhost:3000/tarefa/${Number(taskId)}`);
       
       setStages(prevStages =>
         prevStages.map(stage => ({
@@ -521,48 +522,9 @@ const ProjectTasks = () => {
           </Dialog>
         )}
 
-        <Dialog open={isTaskDetailsOpen} onOpenChange={setIsTaskDetailsOpen}>
-          <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-[800px] w-full max-h-[80vh] flex flex-col">
-            {editableTask && (
-              <>
-                <DialogHeader className="flex-shrink-0">
-                  <div className="flex justify-between items-center">
-                    {isEditing ? (
-                      <input
-                        value={editableTask.tarefa_id}
-                        onChange={(e) => setEditableTask({
-                          ...editableTask,
-                          tarefa_nome: e.target.value
-                        })}
-                        className="text-2xl font-bold border rounded p-2 w-full"
-                      />
-                    ) : (
-                      <DialogTitle className="text-2xl font-bold tracking-tight">
-                        {editableTask.tarefa_nome}
-                      </DialogTitle>
-                    )}
-                    <div className="flex gap-2">
-                      {!isEditing ? (
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsEditing(true)}
-                        >
-                          <Pen size={16} className="mr-2" />
-                          Editar
-                        </Button>
-                      ) : (
-                        <>
-                          
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <DialogDescription className="text-gray-600">
-                    Detalhes da tarefa
-                  </DialogDescription>
-                </DialogHeader>
-
+          <Dialog open={isTaskDetailsOpen} onOpenChange={setIsTaskDetailsOpen}>
+            <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-[800px] w-full max-h-[80vh] flex flex-col">
+              {editableTask && (
                 <TaskDetails
                   task={editableTask}
                   subtasks={subtasks}
@@ -598,10 +560,9 @@ const ProjectTasks = () => {
                   }}
                   onEdit={() => setIsEditing(true)}
                 />
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
+              )}
+            </DialogContent>
+          </Dialog>
       </div>
     </div>
   );

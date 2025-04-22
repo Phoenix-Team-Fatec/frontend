@@ -3,7 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Plus, Save, X } from "lucide-react";
+import { Plus, Save, X, Pen } from "lucide-react";
+import { useState } from "react";
+
+
+
+// Interfaces (pode mover para um arquivo separado types.ts se preferir)
+interface Tarefa {
+  tarefa_id: number;
+  tarefa_nome: string;
+  tarefa_descricao: string;
+  tarefa_data_inicio: string;
+  tarefa_data_fim: string;
+  tarefa_status: boolean;
+}
 
 interface TaskDetailsProps {
   task: any;
@@ -25,6 +38,7 @@ interface TaskDetailsProps {
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
+  dialogHeader?: React.ReactNode
 }
 
 export default function TaskDetails({
@@ -46,10 +60,57 @@ export default function TaskDetails({
   onNewResponsavelChange,
   onSave,
   onCancel,
-  onEdit,
+  onEdit
 }: TaskDetailsProps) {
+
+
+  const [editTask, setEditTask] = useState<Tarefa | null>(null);
+
+
+  
+
+
+
+  
+
+
   return (
+
+      
+
+
     <div className="space-y-6 mt-4 overflow-y-auto flex-grow">
+
+      
+     {/* Header movido para dentro do componente */}
+     <div className="flex-shrink-0">
+        <div className="flex justify-between items-center">
+          {isEditing ? (
+            <input
+              value={task.tarefa_nome}
+              onChange={(e) => onTaskChange("tarefa_nome", e.target.value)}
+              className="text-2xl font-bold border rounded p-2 w-full"
+            />
+          ) : (
+            <h2 className="text-2xl font-bold tracking-tight">
+              {task.tarefa_nome}
+            </h2>
+          )}
+          <div className="flex gap-2">
+            {!isEditing && (
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={onEdit}
+              >
+                <Pen size={16} className="mr-2" />
+                Editar
+              </Button>
+            )}
+          </div>
+        </div>
+        <p className="text-gray-600">Detalhes da tarefa</p>
+      </div>
       {/* Responsáveis */}
       <div>
         <Label className="block text-sm font-medium text-gray-700 mb-2">Responsáveis</Label>
