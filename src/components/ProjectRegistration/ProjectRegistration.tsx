@@ -306,8 +306,9 @@ export default function ProjectRegistration({
             )}
           </div>
 
-          {/* <div>
-              <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Área de atuação</label>
+            <div className="flex space-x-2">
               <Input
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
@@ -332,10 +333,11 @@ export default function ProjectRegistration({
                 <div
                   key={`stored-${index}`}
                   onClick={() => toggleAreaSelection(area)}
-                  className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${selectedAreas.includes(area)
-                    ? 'bg-green-100 border-green-500 text-green-800'
-                    : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
-                    }`}
+                  className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
+                    selectedAreas.includes(area) 
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
+                  }`}
                 >
                   {selectedAreas.includes(area) && <Check size={14} className="text-green-600" />}
                   <span>{area}</span>
@@ -349,7 +351,7 @@ export default function ProjectRegistration({
             )}
           </div>
 
-          {/* Áreas cadastradas durante a sessão atual  */}
+          {/* Áreas cadastradas durante esta sessão */}
           {areasList.length > 0 && (
             <div className="space-y-1">
               <Label>Áreas cadastradas nesta sessão</Label>
