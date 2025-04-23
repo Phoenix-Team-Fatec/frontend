@@ -1,27 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import TaskCard from "../TaskCard/TaskCard";
-import { Trash2 } from "lucide-react"; // Importando o ícone de lixeira
+import { Trash2 } from "lucide-react";
+
+interface Tarefa {
+  tarefa_id: number;
+  tarefa_nome: string;
+  tarefa_descricao: string;
+  tarefa_data_inicio: string;
+  tarefa_data_fim: string;
+  tarefa_status: boolean;
+}
+
+interface Stage {
+  etapa_id: number;
+  etapa_nome: string;
+  etapa_descricao?: string;
+  tarefas?: Tarefa[];
+}
 
 interface StageCardProps {
-  stage: {
-    etapa_id: number;
-    etapa_nome: string;
-    etapa_descricao?: string;
-    tarefas?: Array<{
-      tarefa_id: number;
-      tarefa_nome: string;
-      tarefa_descricao: string;
-      tarefa_data_inicio: string;
-      tarefa_data_fim: string;
-      tarefa_status: boolean;
-    }>;
-  };
+  stage: Stage;
   onAddTask: (stageId: number) => void;
-  onEditTask: (task: any) => void;
+  onEditTask: (task: Tarefa) => void;
   onDeleteTask: (taskId: number) => void;
-  onOpenTaskDetails: (task: any) => void;
-  onDeleteStage: (stageId: number) => void; // Nova prop para deletar etapa
+  onOpenTaskDetails: (task: Tarefa) => void;
+  onDeleteStage: (stageId: number) => void;
 }
 
 export default function StageCard({
@@ -30,14 +34,15 @@ export default function StageCard({
   onEditTask,
   onDeleteTask,
   onOpenTaskDetails,
-  onDeleteStage, // Recebendo a prop
+  onDeleteStage,
 }: StageCardProps) {
-  const totalTarefas = stage.tarefas?.length || 0;
-  const tarefasConcluidas = stage.tarefas?.filter(t => t.tarefa_status)?.length || 0;
-  const percentual = totalTarefas > 0 ? Math.round((tarefasConcluidas / totalTarefas) * 100) : 0;
+  const tarefas = stage.tarefas ?? [];
+  const tarefasConcluidas = tarefas.filter(t => t.tarefa_status).length;
+  const progresso = tarefas.length > 0 ? Math.round((tarefasConcluidas / tarefas.length) * 100) : 0;
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full border border-gray-200">
+      {/* Título da etapa e botão de deletar */}
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-xl font-semibold text-[#355EAF]">{stage.etapa_nome}</h3>
         <Button 
@@ -53,7 +58,8 @@ export default function StageCard({
       {stage.etapa_descricao && (
         <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
       )}
-      
+
+      {/* Botão para adicionar tarefa */}
       <Button 
         onClick={() => onAddTask(stage.etapa_id)} 
         className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4"
@@ -61,15 +67,17 @@ export default function StageCard({
         + Adicionar Tarefa
       </Button>
 
-      {stage.tarefas && stage.tarefas.length > 0 && (
+      {/* Barra de progresso */}
+      {tarefas.length > 0 && (
         <div className="mb-4">
-          <p className="text-sm text-gray-600 mb-1">Progresso: {percentual}%</p>
-          <Progress value={percentual} className="h-2 bg-gray-200" />
+          <p className="text-sm text-gray-600 mb-1">Progresso: {progresso}%</p>
+          <Progress value={progresso} className="h-2 bg-gray-200" />
         </div>
       )}
 
+      {/* Lista de tarefas */}
       <div className="space-y-3 flex-grow overflow-y-auto max-h-[50vh]">
-        {(stage.tarefas || []).map((task) => (
+        {tarefas.map((task) => (
           <TaskCard
             key={task.tarefa_id}
             task={task}
