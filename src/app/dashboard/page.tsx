@@ -157,13 +157,17 @@ export default function Dashboard() {
     }, 3000);
   };
 
-  const handleProjectCreation = async (newProjectData: { title: string; responsibles: { email: string; user_id?: number }[]; area: string; description: string, startDate: string, endDate: string }) => {
+  const handleProjectCreation = async (newProjectData: { title: string; responsibles: { email: string; user_id?: number }[]; selectedArea: number; description: string, startDate: string, endDate: string,partnerInstitutions:string[], fundingInstitutions:string[], projectValue:number  }) => {
     const data = {
       proj_nome: newProjectData.title,
       proj_descricao: newProjectData.description,
-      proj_area_atuacao: newProjectData.area,
+      area_atuacao_id: newProjectData.selectedArea,
       proj_data_inicio: newProjectData.startDate,
-      proj_data_fim: newProjectData.endDate
+      proj_data_fim: newProjectData.endDate,
+      proj_inst_financiadoras: newProjectData.fundingInstitutions,
+      proj_inst_parceiras: newProjectData.partnerInstitutions,
+      proj_valor_total: newProjectData.projectValue
+
     };
 
     try {

@@ -47,7 +47,7 @@ export default function ProjectRegistration({
   const [endDate, setEndDate] = useState("");
 
   const [areasList, setAreasList] = useState<Area_atuacao[]>([]);
-  const [selectedAreas, setSelectedAreas] = useState<number[]>([]); // Áreas selecionadas para este projeto
+  const [selectedArea, setSelectedArea] = useState(Number); // Áreas selecionadas para este projeto
   const [partnerInstitutions, setPartnerInstitutions] = useState<string[]>([]);
   const [fundingInstitutions, setFundingInstitutions] = useState<string[]>([]);
   const [projectValue, setProjectValue] = useState("");
@@ -164,17 +164,13 @@ export default function ProjectRegistration({
   // };
 
   const toggleAreaSelection = (area: number) => {
-    if (selectedAreas.includes(area)) {
-      setSelectedAreas(selectedAreas.filter(a => a !== area));
-    } else {
-      setSelectedAreas([...selectedAreas, area]);
-    }
+    setSelectedArea(area)
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const area_01 = selectedAreas[0]
+    
 
     const projectData = {
       title,
@@ -182,7 +178,7 @@ export default function ProjectRegistration({
       description,
       startDate,
       endDate,
-      area_01, // Agora usamos as áreas selecionadas
+      selectedArea, // Agora usamos as áreas selecionadas
       partnerInstitutions,
       fundingInstitutions,
       projectValue,
@@ -367,21 +363,18 @@ export default function ProjectRegistration({
                   key={`stored-${area.area_atuacao_id}`}
                   onClick={() => toggleAreaSelection(area.area_atuacao_id)}
                   className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
-                    selectedAreas.includes(area.area_atuacao_id) 
+                    selectedArea
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {selectedAreas.includes(area.area_atuacao_id) && <Check size={14} className="text-green-600" />}
+                  {selectedArea  && <Check size={14} className="text-green-600" />}
                   <span>{area.area_atuacao_nome}</span>
                 </div>
               ))}
             </div>
-            {selectedAreas.length > 0 && (
-              <div className="mt-2 text-sm text-green-600">
-                {selectedAreas.length} área(s) selecionada(s) para este projeto
-              </div>
-            )}
+            
+            
           </div>
 
           {/* Áreas cadastradas durante esta sessão */}
