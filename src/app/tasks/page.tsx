@@ -317,7 +317,7 @@ const ProjectTasks = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post(`http://localhost:3000/tarefa`, taskData);
+      const response = await axios.put(`http://localhost:3000/tarefa`, taskData);
 
       for (const user of responsibles) {
         const relUserTarefa_data = {
