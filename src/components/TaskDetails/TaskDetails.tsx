@@ -4,8 +4,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Plus, Save, X, Pen } from "lucide-react";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
 
 // Interfaces (pode mover para um arquivo separado types.ts se preferir)
@@ -22,7 +22,8 @@ interface TaskDetailsProps {
   task: any;
   isEditing: boolean;
   subtasks: any[];
-  responsaveis: string[];
+  responsaveis: Responsavel[];
+  availableUsers: { user_id: number; user_nome: string; user_email: string; user_foto: string; }[];
   newSubtaskName: string;
   newResponsavel: string;
   onTaskChange: (field: string, value: string | boolean) => void;
@@ -30,16 +31,20 @@ interface TaskDetailsProps {
   onRemoveSubtask: (index: number) => void;
   onToggleSubtask: (index: number) => void;
   onSubtaskChange: (index: number, value: string) => void;
-  onAddResponsavel: () => void;
+  onAddResponsavel: (r: Responsavel) => void;
   onRemoveResponsavel: (index: number) => void;
-  onResponsavelChange: (index: number, value: string) => void;
   onNewSubtaskChange: (value: string) => void;
-  onNewResponsavelChange: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
   dialogHeader?: React.ReactNode
 }
+
+interface Responsavel {
+  email: string;
+  user_id?: number;
+}
+
 
 export default function TaskDetails({
   task,
@@ -47,6 +52,7 @@ export default function TaskDetails({
   subtasks,
   responsaveis,
   newSubtaskName,
+  availableUsers,
   newResponsavel,
   onTaskChange,
   onAddSubtask,
@@ -55,35 +61,65 @@ export default function TaskDetails({
   onSubtaskChange,
   onAddResponsavel,
   onRemoveResponsavel,
-  onResponsavelChange,
   onNewSubtaskChange,
-  onNewResponsavelChange,
   onSave,
   onCancel,
   onEdit
 }: TaskDetailsProps) {
 
-
   const [editTask, setEditTask] = useState<Tarefa | null>(null);
+  const [responsibleInput, setResponsibleInput] = useState("");
 
+  const [filteredSuggestions, setFilteredSuggestions] =
+    useState<TaskDetailsProps["availableUsers"]>([]);
 
-  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  const handleResponsibleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setResponsibleInput(value);
+    if (value.trim()) {
+      setFilteredSuggestions(
+        availableUsers.filter(u =>
+          u.user_email.toLowerCase().includes(value.toLowerCase()) &&
+          !responsaveis.some(r => r.email === u.user_email)
+        )
+      );
+    } else {
+      setFilteredSuggestions([]);
+    }
+  };
 
+  const handleAddResponsible = (emailFromSuggestion?: string) => {
+    const email = (emailFromSuggestion ?? responsibleInput).trim();
+    if (!emailRegex.test(email)) {
+      alert("Por favor, insira um e-mail válido.");
+      return;
+    }
+    if (responsaveis.some(r => r.email === email)) return;
+    const match = availableUsers.find(u => u.user_email === email);
+    onAddResponsavel({ email, user_id: match?.user_id });
+    setResponsibleInput("");
+    setFilteredSuggestions([]);
+  };
 
-  
-
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddResponsible();
+    }
+  };
 
   return (
 
-      
+
 
 
     <div className="space-y-6 mt-4 overflow-y-auto flex-grow">
 
-      
-     {/* Header movido para dentro do componente */}
-     <div className="flex-shrink-0">
+
+      {/* Header movido para dentro do componente */}
+      <div className="flex-shrink-0">
         <div className="flex justify-between items-center">
           {isEditing ? (
             <input
@@ -98,7 +134,7 @@ export default function TaskDetails({
           )}
           <div className="flex gap-2">
             {!isEditing && (
-              <Button 
+              <Button
                 variant="outline"
                 size="sm"
                 onClick={onEdit}
@@ -112,52 +148,96 @@ export default function TaskDetails({
         <p className="text-gray-600">Detalhes da tarefa</p>
       </div>
       {/* Responsáveis */}
+      {/* Responsáveis */}
       <div>
-        <Label className="block text-sm font-medium text-gray-700 mb-2">Responsáveis</Label>
-        <div className="space-y-2">
-          {responsaveis.map((responsavel, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-              {isEditing ? (
-                <div className="flex gap-2 w-full">
-                  <Input
-                    value={responsavel}
-                    onChange={(e) => onResponsavelChange(index, e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => onRemoveResponsavel(index)}
+        <Label className="block text-sm font-medium text-gray-700 mb-2">
+          Responsáveis
+        </Label>
+
+        {/* input + sugestões */}
+        {isEditing && (
+          <div className="relative flex gap-2 mb-4">
+            <Input
+              id="responsible"
+              type="email"
+              placeholder="usuario@exemplo.com"
+              value={responsibleInput}
+              onChange={handleResponsibleInputChange}
+              onKeyDown={handleKeyDown}
+              className="flex-1"
+            />
+
+            {filteredSuggestions.length > 0 && (
+              <ul className="absolute z-10 top-full left-0 w-full bg-white border rounded shadow mt-1">
+                {filteredSuggestions.map(u => (
+                  <li
+                    key={u.user_id}
+                    className="p-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleAddResponsible(u.user_email)}
                   >
-                    <X size={16} />
-                  </Button>
-                </div>
-              ) : (
-                <span>{responsavel}</span>
-              )}
-            </div>
-          ))}
-          {isEditing && (
-            <div className="flex gap-2">
-              <Input
-                placeholder="Adicionar responsável"
-                value={newResponsavel}
-                onChange={(e) => onNewResponsavelChange(e.target.value)}
-                className="flex-1"
-              />
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onAddResponsavel}
-                disabled={!newResponsavel.trim()}
-              >
-                <Plus size={16} className="mr-1" />
-                Adicionar
-              </Button>
-            </div>
-          )}
-        </div>
+                    {u.user_email}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* exibição simples quando não está editando */}
+        {!isEditing && responsaveis.length > 0 && (
+          <ul className="space-y-2">
+            {responsaveis.map((r, idx) => (
+              <li key={idx} className="bg-gray-50 p-2 rounded">
+                {r.email}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* cards quando em edição */}
+        {isEditing && responsaveis.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {responsaveis.map((r, idx) => {
+              const detalhes = availableUsers.find(u => u.user_email === r.email);
+              return (
+                <Card key={idx} className="p-4 w-full flex items-center space-x-6">
+                  <CardContent className="flex items-center w-full p-0">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                      {detalhes?.user_foto ? (
+                        <img
+                          src={detalhes.user_foto}
+                          alt="Foto do usuário"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="flex items-center justify-center h-full text-gray-600 font-medium">
+                          {r.email[0].toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="ml-2 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {detalhes?.user_nome ?? r.email}
+                      </p>
+                      <p className="text-xs text-gray-500 break-words">{r.email}</p>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onRemoveResponsavel(idx)}
+                    >
+                      <X size={16} />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
+
 
       {/* Sub-tarefas */}
       <div className="max-h-[300px] overflow-y-auto">
@@ -178,9 +258,9 @@ export default function TaskDetails({
                       onChange={(e) => onSubtaskChange(index, e.target.value)}
                       className="flex-1"
                     />
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => onRemoveSubtask(index)}
                     >
                       <X size={16} />
@@ -189,11 +269,10 @@ export default function TaskDetails({
                 ) : (
                   <Label
                     htmlFor={`subtask-${index}`}
-                    className={`text-sm flex-grow ${
-                      subtask.subtarefa_concluida 
-                        ? 'line-through text-gray-500 decoration-2' 
-                        : 'text-gray-800'
-                    }`}
+                    className={`text-sm flex-grow ${subtask.subtarefa_concluida
+                      ? 'line-through text-gray-500 decoration-2'
+                      : 'text-gray-800'
+                      }`}
                   >
                     {subtask.subtarefa_nome}
                   </Label>
@@ -209,9 +288,9 @@ export default function TaskDetails({
                 onChange={(e) => onNewSubtaskChange(e.target.value)}
                 className="flex-1"
               />
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onAddSubtask}
                 disabled={!newSubtaskName.trim()}
               >
@@ -296,11 +375,10 @@ export default function TaskDetails({
             </Label>
           </div>
         ) : (
-          <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-            task.tarefa_status 
-              ? "bg-green-100 text-green-800" 
-              : "bg-yellow-100 text-yellow-800"
-          }`}>
+          <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${task.tarefa_status
+            ? "bg-green-100 text-green-800"
+            : "bg-yellow-100 text-yellow-800"
+            }`}>
             {task.tarefa_status ? "Concluída" : "Pendente"}
           </div>
         )}
@@ -309,14 +387,14 @@ export default function TaskDetails({
       {/* Botões de ação */}
       {isEditing ? (
         <div className="flex gap-2 pt-4">
-          <Button 
+          <Button
             variant="outline"
             onClick={onCancel}
             className="flex-1"
           >
             Cancelar
           </Button>
-          <Button 
+          <Button
             variant="default"
             onClick={onSave}
             className="flex-1"
@@ -326,7 +404,7 @@ export default function TaskDetails({
           </Button>
         </div>
       ) : (
-        <Button 
+        <Button
           variant="outline"
           onClick={onEdit}
           className="w-full mt-4"

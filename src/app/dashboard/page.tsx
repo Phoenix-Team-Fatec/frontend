@@ -169,13 +169,16 @@ export default function Dashboard() {
       const response = await axios.post(`http://localhost:3000/projeto`, data);
       const projId = response.data.proj_id;
 
+
+      console.log("daiopsdaop", newProjectData.responsibles)
       for (const user of newProjectData.responsibles) {
         const relUserProj_data = {
-          user_id: userId,
+          user_id: user?.user_id,
           proj_id: Number(projId),
           coordenador: user.user_id === userDataHook.user_id,
           user_email: user.email,
         };
+        console.log("daiopsdaop", relUserProj_data)
         await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
       }
 
