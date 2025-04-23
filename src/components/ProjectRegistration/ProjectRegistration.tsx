@@ -14,6 +14,14 @@ import { Label } from "../ui/label";
 import { Trash2, Check } from "lucide-react";
 import { useUser } from "@/hook/UserData";
 
+
+
+interface Area_atuacao{
+    area_atuacao_id: number,
+    area_atuacao_nome:string
+}
+
+
 export default function ProjectRegistration({
   open,
   setOpen,
@@ -38,20 +46,39 @@ export default function ProjectRegistration({
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const [areasList, setAreasList] = useState<string[]>([]);
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]); // Áreas selecionadas para este projeto
+  const [areasList, setAreasList] = useState<Area_atuacao[]>([]);
+  const [selectedAreas, setSelectedAreas] = useState<number[]>([]); // Áreas selecionadas para este projeto
   const [partnerInstitutions, setPartnerInstitutions] = useState<string[]>([]);
   const [fundingInstitutions, setFundingInstitutions] = useState<string[]>([]);
   const [projectValue, setProjectValue] = useState("");
 
   // Simulação de áreas já cadastradas no banco de dados
   // Na implementação com o back ira vir de uma chamada API
-  const [storedAreas, setStoredAreas] = useState<string[]>([
-    "Saúde Pública",
-    "Educação",
-    "Tecnologia",
-    "Meio Ambiente"
-  ]);
+  const [storedAreas, setStoredAreas] = useState<Area_atuacao[]>([]);
+
+
+  useEffect(() => {
+    const fetchAreaAtuacao = async () => {
+      try{
+
+
+        const {data} = await axios.get("http://localhost:3000/area_atuacao")
+
+        
+        
+        setAreasList(data)
+        setStoredAreas(data)
+       
+      }catch(error){
+        console.log(error)
+      }
+    }
+
+    fetchAreaAtuacao()
+  },[])
+
+
+
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -65,6 +92,8 @@ export default function ProjectRegistration({
           email: user.user_email,
           user_foto: user.user_foto
         }));
+
+        
 
         setAvailableUsers(formattedUsuario);
       } catch (error) {
@@ -84,6 +113,9 @@ export default function ProjectRegistration({
       });
     }
   }, [userDataHook]);
+
+
+
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -116,23 +148,22 @@ export default function ProjectRegistration({
     setResponsibles(responsibles.filter((_, i) => i !== index));
   };
 
-  const addArea = () => {
-    if (area && !areasList.includes(area)) {
-      setAreasList([...areasList, area]);
-      // Simulação: add também às áreas armazenadas no "banco de dados"
-      // Na implementação com o back, isso seria uma chamada API POST para salvar a nova área
-      setStoredAreas(prev => [...prev, area]);
-      setArea("");
-    }
-  };
+  // const addAreaAtuacao = () => {
+  //   if (area && !areasList.includes(area)) {
+  //     setAreasList([...areasList, area]);
+     
+  //     setStoredAreas(prev => [...prev, area]);
+  //     setArea("");
+  //   }
+  // };
 
-  const removeArea = (areaToRemove: string) => {
-    setAreasList(areasList.filter((a) => a !== areaToRemove));
-    // Remove também das selecionadas, se estiver lá
-    setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove));
-  };
+  // const removeArea = (areaToRemove: string) => {
+  //   setAreasList(areasList.filter((a) => a !== areaToRemove));
+  //   // Remove também das selecionadas, se estiver lá
+  //   setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove));
+  // };
 
-  const toggleAreaSelection = (area: string) => {
+  const toggleAreaSelection = (area: number) => {
     if (selectedAreas.includes(area)) {
       setSelectedAreas(selectedAreas.filter(a => a !== area));
     } else {
@@ -143,13 +174,15 @@ export default function ProjectRegistration({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const area_01 = selectedAreas[0]
+
     const projectData = {
       title,
       responsibles,
       description,
       startDate,
       endDate,
-      selectedAreas, // Agora usamos as áreas selecionadas
+      area_01, // Agora usamos as áreas selecionadas
       partnerInstitutions,
       fundingInstitutions,
       projectValue,
@@ -317,7 +350,7 @@ export default function ProjectRegistration({
               />
               <Button 
                 type="button" 
-                onClick={addArea}
+                // onClick={() => addAreaAtuacao()}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Adicionar
@@ -329,18 +362,18 @@ export default function ProjectRegistration({
           <div className="space-y-2">
             <Label>Áreas disponíveis</Label>
             <div className="flex flex-wrap gap-2">
-              {storedAreas.map((area, index) => (
+              {storedAreas.map((area) => (
                 <div
-                  key={`stored-${index}`}
-                  onClick={() => toggleAreaSelection(area)}
+                  key={`stored-${area.area_atuacao_id}`}
+                  onClick={() => toggleAreaSelection(area.area_atuacao_id)}
                   className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
-                    selectedAreas.includes(area) 
+                    selectedAreas.includes(area.area_atuacao_id) 
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {selectedAreas.includes(area) && <Check size={14} className="text-green-600" />}
-                  <span>{area}</span>
+                  {selectedAreas.includes(area.area_atuacao_id) && <Check size={14} className="text-green-600" />}
+                  <span>{area.area_atuacao_nome}</span>
                 </div>
               ))}
             </div>
@@ -356,16 +389,16 @@ export default function ProjectRegistration({
             <div className="space-y-1">
               <Label>Áreas cadastradas nesta sessão</Label>
               <ul className="space-y-1">
-                {areasList.map((a, index) => (
+                {areasList.map((area) => (
                   <li
-                    key={`new-${index}`}
+                    key={`new-${area.area_atuacao_id}`}
                     className="flex justify-between items-center bg-gray-100 px-2 py-1 rounded"
                   >
-                    <span>{a}</span>
+                    <span>{area.area_atuacao_nome}</span> 
                     <Trash2
                       size={16}
                       className="text-red-500 cursor-pointer"
-                      onClick={() => removeArea(a)}
+                      // onClick={() => removeArea(area.area_atuacao_id)}
                     />
                   </li>
                 ))}

@@ -27,7 +27,7 @@ export default function Dashboard() {
   const [excludedProjects, setExcludedProjects] = useState<any[]>([]);  
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [userId, setUserId] = useState(userData.user_id);
+  const [userId, setUserId] = useState(Number);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
@@ -49,6 +49,7 @@ export default function Dashboard() {
       router.push('/sign-in');
     } else {
       setAuthChecked(true);
+      
       setUserId(Number(userData.user_id))
     }
   }, [router]);
