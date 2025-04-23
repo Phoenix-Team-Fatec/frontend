@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import TaskCard from "../TaskCard/TaskCard";
@@ -10,6 +12,7 @@ interface Tarefa {
   tarefa_data_inicio: string;
   tarefa_data_fim: string;
   tarefa_status: boolean;
+  responsavel?: string;
 }
 
 interface Stage {
@@ -42,7 +45,6 @@ export default function StageCard({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full border border-gray-200">
-      {/* Título da etapa e botão de deletar */}
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-xl font-semibold text-[#355EAF]">{stage.etapa_nome}</h3>
         <Button 
@@ -59,7 +61,6 @@ export default function StageCard({
         <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
       )}
 
-      {/* Botão para adicionar tarefa */}
       <Button 
         onClick={() => onAddTask(stage.etapa_id)} 
         className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4"
@@ -67,7 +68,6 @@ export default function StageCard({
         + Adicionar Tarefa
       </Button>
 
-      {/* Barra de progresso */}
       {tarefas.length > 0 && (
         <div className="mb-4">
           <p className="text-sm text-gray-600 mb-1">Progresso: {progresso}%</p>
@@ -75,7 +75,6 @@ export default function StageCard({
         </div>
       )}
 
-      {/* Lista de tarefas */}
       <div className="space-y-3 flex-grow overflow-y-auto max-h-[50vh]">
         {tarefas.map((task) => (
           <TaskCard

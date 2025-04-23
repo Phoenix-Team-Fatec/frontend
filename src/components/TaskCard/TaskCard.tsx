@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pen, Trash2 } from "lucide-react";
@@ -18,13 +20,13 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, onClick, onEdit, onDelete }: TaskCardProps) {
   return (
-    <Card className="border border-gray-200 hover:shadow-md transition-shadow duration-200">
+    <Card 
+      className="border border-gray-200 hover:shadow-md transition-shadow duration-200 cursor-pointer"
+      onClick={onClick}
+    >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-1">
-          <p 
-            className="font-medium text-gray-800 cursor-pointer hover:text-[#355EAF]"
-            onClick={onClick}
-          >
+          <p className="font-medium text-gray-800 hover:text-[#355EAF]">
             {task.tarefa_nome}
           </p>
           <div className="flex gap-2">
@@ -53,7 +55,9 @@ export default function TaskCard({ task, onClick, onEdit, onDelete }: TaskCardPr
           </div>
         </div>
         
-        <p className="text-gray-600 text-sm mb-2">{task.tarefa_descricao}</p>
+        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+          {task.tarefa_descricao}
+        </p>
         <div className="text-xs text-gray-500 space-y-1">
           <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
           <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div>
