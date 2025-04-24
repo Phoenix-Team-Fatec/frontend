@@ -370,7 +370,7 @@ const addAreaAtuacao = async () => {
               </div>
             </div>
 
-            {/* Áreas já cadastradas (simulando busca no banco de dados) */}
+       
             <div className="space-y-2">
               <Label>Áreas disponíveis</Label>
               <div className="flex flex-wrap gap-2">
@@ -379,12 +379,12 @@ const addAreaAtuacao = async () => {
                     key={`stored-${area.area_atuacao_id}`}
                     onClick={() => toggleAreaSelection(area.area_atuacao_id)}
                     className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
-                      selectedArea
+                      selectedArea == area.area_atuacao_id
                         ? 'bg-green-100 border-green-500 text-green-800'
                         : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                     }`}
                   >
-                    {selectedArea  && <Check size={14} className="text-green-600" />}
+                    {selectedArea == area.area_atuacao_id  && <Check size={14} className="text-green-600" />}
                     <span>{area.area_atuacao_nome}</span>
                   </div>
                 ))}
