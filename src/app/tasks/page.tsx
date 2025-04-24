@@ -23,6 +23,7 @@ interface Tarefa {
   tarefa_data_inicio: string;
   tarefa_data_fim: string;
   tarefa_status: boolean;
+  etapa_id: number;
 }
 
 interface Subtarefa {
@@ -75,22 +76,21 @@ const ProjectTasks = () => {
   const [responsibles, setResponsibles] = useState<
     { email: string; user_id?: number }[]
   >([]);
-  const [availableUsers, setAvailableUsers] = useState<
-    { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
-  >([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<
     { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
   >([]);
   const [responsibleInput, setResponsibleInput] = useState("");
   const router = useRouter();
-  
+
   // Estados para o modal de detalhes da tarefa
   const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
   const [editableTask, setEditableTask] = useState<Tarefa | null>(null);
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
-  const [responsaveis, setResponsaveis] = useState<string[]>([]);
+  const [availableUsers, setAvailableUsers] = useState<
+    { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
+  >([]);
   const [newSubtaskName, setNewSubtaskName] = useState("");
   const [newResponsavel, setNewResponsavel] = useState("");
 
@@ -127,44 +127,6 @@ const ProjectTasks = () => {
     } else {
       setFilteredSuggestions([]);
     }
-  };
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  const handleAddResponsible = (emailFromSuggestion?: string) => {
-    const email = emailFromSuggestion ? emailFromSuggestion.trim() : responsibleInput.trim();
-    if (email !== "" && emailRegex.test(email)) {
-      if (responsibles.some((r) => r.email === email) || !availableUsers.some((r) => r.user_email === email)) return;
-
-      const userMatch = availableUsers.find((u) => u.user_email === email);
-      setResponsibles([
-        ...responsibles,
-        { email, user_id: userMatch?.user_id }
-      ]);
-      setResponsibleInput("");
-      setFilteredSuggestions(prevSuggestions =>
-        prevSuggestions.filter(user => user.user_email !== email)
-      );
-    } else {
-      alert("Por favor, insira um email válido.");
-    }
-  };
-
-  const handleSuggestionClick = (selectedEmail: string) => {
-    handleAddResponsible(selectedEmail);
-    setFilteredSuggestions([]);
-  };
-
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddResponsible();
-    }
-  };
-
-  const handleRemoveResponsible = (index: number) => {
-    setResponsibles(responsibles.filter((_, i) => i !== index));
   };
 
   const showNotification = (message: string, success: boolean) => {
@@ -205,9 +167,12 @@ const ProjectTasks = () => {
       try {
         setLoading(true);
         const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${Number(proj_id)}`);
-        const etapasComTarefas = response.data.map(etapa => ({
+        const etapasComTarefas: Etapa[] = response.data.map(etapa => ({
           ...etapa,
-          tarefas: etapa.tarefas || []
+          tarefas: (etapa.tarefas || []).map(t => ({
+            ...t,
+            etapa_id: etapa.etapa_id    // ← injeta aqui
+          }))
         }));
         setStages(etapasComTarefas);
       } catch (error) {
@@ -309,23 +274,26 @@ const ProjectTasks = () => {
     }
   };
 
-  const openTaskDetails = (task: Tarefa) => {
+  const openTaskDetails = (task: Tarefa, etapaId: number) => {
     setSelectedTask(task);
-    setEditableTask({...task});
+    setEditableTask({
+      ...task,
+      etapa_id: etapaId
+    });
     setIsTaskDetailsOpen(true);
     setIsEditing(false);
     setSubtasks([]);
-    setResponsaveis([]);
+    setResponsibles([])
   };
 
   const addSubtask = () => {
     if (!newSubtaskName.trim()) return;
-    
+
     const newSubtask: Subtarefa = {
       subtarefa_nome: newSubtaskName,
       subtarefa_concluida: false
     };
-    
+
     setSubtasks([...subtasks, newSubtask]);
     setNewSubtaskName("");
   };
@@ -342,36 +310,38 @@ const ProjectTasks = () => {
     setSubtasks(updatedSubtasks);
   };
 
-  const addResponsavel = () => {
-    if (!newResponsavel.trim()) return;
-    
-    setResponsaveis([...responsaveis, newResponsavel]);
-    setNewResponsavel("");
-  };
-
-  const removeResponsavel = (index: number) => {
-    const updatedResponsaveis = [...responsaveis];
-    updatedResponsaveis.splice(index, 1);
-    setResponsaveis(updatedResponsaveis);
-  };
-
   const saveTaskChanges = async () => {
     if (!editableTask) return;
-    
+
+    const taskData = {
+      id: editableTask.tarefa_id,
+      nome: editableTask.tarefa_nome,
+      descricao: editableTask.tarefa_descricao,
+      data_inicio: editableTask.tarefa_data_inicio,
+      data_fim: editableTask.tarefa_data_fim,
+      tarefa_status: editableTask.tarefa_status,
+      etapa_id: editableTask.etapa_id
+    };
+
     try {
       setLoading(true);
-      const response = await axios.put(`http://localhost:3000/tarefa/${editableTask.tarefa_id}`, {
-        nome: editableTask.tarefa_nome,
-        descricao: editableTask.tarefa_descricao,
-        data_inicio: editableTask.tarefa_data_inicio,
-        data_fim: editableTask.tarefa_data_fim,
-        tarefa_status: editableTask.tarefa_status,
-      });
+      const response = await axios.put(`http://localhost:3000/tarefa`, taskData);
+
+      for (const user of responsibles) {
+        const relUserTarefa_data = {
+          tarefa_id: Number(response.data.tarefa_id),
+          user_id: user?.user_id,
+        };
+
+        console.log("daiodjioasd", relUserTarefa_data)
+
+        await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data)
+      }
 
       setStages(prevStages =>
         prevStages.map(stage => ({
           ...stage,
-          tarefas: stage.tarefas?.map(t => 
+          tarefas: stage.tarefas?.map(t =>
             t.tarefa_id === editableTask.tarefa_id ? response.data : t
           ) || []
         }))
@@ -391,15 +361,15 @@ const ProjectTasks = () => {
   const deleteTask = async (taskId: number) => {
     try {
       setLoading(true);
-      await axios.delete(`http://localhost:3000/tarefa/${taskId}`);
-      
+      await axios.delete(`http://localhost:3000/tarefa/${Number(taskId)}`);
+
       setStages(prevStages =>
         prevStages.map(stage => ({
           ...stage,
           tarefas: stage.tarefas?.filter(t => t.tarefa_id !== taskId) || []
         }))
       );
-      
+
       setIsTaskDetailsOpen(false);
       showNotification("Tarefa excluída com sucesso!", true);
     } catch (error) {
@@ -423,7 +393,7 @@ const ProjectTasks = () => {
   return (
     <div className="flex min-h-screen">
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
+
       <div className={`w-full p-8 ${contentMargin}`}>
         <h2 className="text-2xl font-bold text-gray-800">Etapas do Projeto</h2>
         <div className="pr-8">
@@ -442,7 +412,7 @@ const ProjectTasks = () => {
                 stage={stage}
                 onAddTask={() => setSelectedStage(stage.etapa_id)}
                 onEditTask={(task) => {
-                  openTaskDetails(task);
+                  openTaskDetails(task, stage.etapa_id);
                   setIsEditing(true);
                 }}
                 onDeleteTask={(taskId) => {
@@ -471,7 +441,7 @@ const ProjectTasks = () => {
                 </DialogHeader>
                 <StageForm
                   stage={newStage}
-                  onChange={(field, value) => setNewStage({...newStage, [field]: value})}
+                  onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
                   onSubmit={createStage}
                   isSubmitting={loading}
                 />
@@ -496,7 +466,7 @@ const ProjectTasks = () => {
                 </DialogHeader>
                 <StageForm
                   stage={newStage}
-                  onChange={(field, value) => setNewStage({...newStage, [field]: value})}
+                  onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
                   onSubmit={createStage}
                   isSubmitting={loading}
                 />
@@ -513,7 +483,7 @@ const ProjectTasks = () => {
               </DialogHeader>
               <TaskForm
                 task={newTask}
-                onChange={(field, value) => setNewTask({...newTask, [field]: value})}
+                onChange={(field, value) => setNewTask({ ...newTask, [field]: value })}
                 onSubmit={() => addTask(selectedStage)}
                 isSubmitting={loading}
               />
@@ -524,98 +494,36 @@ const ProjectTasks = () => {
         <Dialog open={isTaskDetailsOpen} onOpenChange={setIsTaskDetailsOpen}>
           <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-[800px] w-full max-h-[80vh] flex flex-col">
             {editableTask && (
-              <>
-                <DialogHeader className="flex-shrink-0">
-                  <div className="flex justify-between items-center">
-                    {isEditing ? (
-                      <input
-                        value={editableTask.tarefa_nome}
-                        onChange={(e) => setEditableTask({
-                          ...editableTask,
-                          tarefa_nome: e.target.value
-                        })}
-                        className="text-2xl font-bold border rounded p-2 w-full"
-                      />
-                    ) : (
-                      <DialogTitle className="text-2xl font-bold tracking-tight">
-                        {editableTask.tarefa_nome}
-                      </DialogTitle>
-                    )}
-                    <div className="flex gap-2">
-                      {!isEditing ? (
-                        <Button 
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setIsEditing(true)}
-                        >
-                          <Pen size={16} className="mr-2" />
-                          Editar
-                        </Button>
-                      ) : (
-                        <>
-                          <Button 
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setIsEditing(false);
-                              setEditableTask(selectedTask ? {...selectedTask} : null);
-                            }}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button 
-                            variant="default"
-                            size="sm"
-                            onClick={saveTaskChanges}
-                          >
-                            <Save size={16} className="mr-2" />
-                            Salvar
-                          </Button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <DialogDescription className="text-gray-600">
-                    Detalhes da tarefa
-                  </DialogDescription>
-                </DialogHeader>
-
-                <TaskDetails
-                  task={editableTask}
-                  subtasks={subtasks}
-                  responsaveis={responsaveis}
-                  newSubtaskName={newSubtaskName}
-                  newResponsavel={newResponsavel}
-                  isEditing={isEditing}
-                  onTaskChange={(field, value) => setEditableTask({
-                    ...editableTask,
-                    [field]: value
-                  })}
-                  onAddSubtask={addSubtask}
-                  onRemoveSubtask={removeSubtask}
-                  onToggleSubtask={toggleSubtask}
-                  onSubtaskChange={(index, value) => {
-                    const updated = [...subtasks];
-                    updated[index].subtarefa_nome = value;
-                    setSubtasks(updated);
-                  }}
-                  onAddResponsavel={addResponsavel}
-                  onRemoveResponsavel={removeResponsavel}
-                  onResponsavelChange={(index, value) => {
-                    const updated = [...responsaveis];
-                    updated[index] = value;
-                    setResponsaveis(updated);
-                  }}
-                  onNewSubtaskChange={setNewSubtaskName}
-                  onNewResponsavelChange={setNewResponsavel}
-                  onSave={saveTaskChanges}
-                  onCancel={() => {
-                    setIsEditing(false);
-                    setEditableTask(selectedTask ? {...selectedTask} : null);
-                  }}
-                  onEdit={() => setIsEditing(true)}
-                />
-              </>
+              <TaskDetails
+                availableUsers={availableUsers}
+                task={editableTask}
+                subtasks={subtasks}
+                responsaveis={responsibles}
+                newSubtaskName={newSubtaskName}
+                newResponsavel={newResponsavel}
+                isEditing={isEditing}
+                onTaskChange={(field, value) => setEditableTask({
+                  ...editableTask,
+                  [field]: value
+                })}
+                onAddSubtask={addSubtask}
+                onRemoveSubtask={removeSubtask}
+                onToggleSubtask={toggleSubtask}
+                onSubtaskChange={(index, value) => {
+                  const updated = [...subtasks];
+                  updated[index].subtarefa_nome = value;
+                  setSubtasks(updated);
+                }}
+                onAddResponsavel={(r) => setResponsibles([...responsibles, r])}
+                onRemoveResponsavel={(i) => setResponsibles(rs => rs.filter((_, j) => j !== i))}
+                onNewSubtaskChange={setNewSubtaskName}
+                onSave={saveTaskChanges}
+                onCancel={() => {
+                  setIsEditing(false);
+                  setEditableTask(selectedTask ? { ...selectedTask } : null);
+                }}
+                onEdit={() => setIsEditing(true)}
+              />
             )}
           </DialogContent>
         </Dialog>
