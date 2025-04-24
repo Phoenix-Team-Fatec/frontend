@@ -13,6 +13,12 @@ import axios from "axios";
 import { Label } from "../ui/label";
 import { Trash2, Check } from "lucide-react";
 import { useUser } from "@/hook/UserData";
+import ManageAreasModal from "../ManagerAreaModal/ManagerAreasModal";
+
+interface AreaAtuacao {
+  area_atuacao_id?: number;
+  area_atuacao_nome: string;
+}
 
 export default function ProjectRegistration({
   open,
@@ -43,15 +49,20 @@ export default function ProjectRegistration({
   const [partnerInstitutions, setPartnerInstitutions] = useState<string[]>([]);
   const [fundingInstitutions, setFundingInstitutions] = useState<string[]>([]);
   const [projectValue, setProjectValue] = useState("");
-
-  // Simulação de áreas já cadastradas no banco de dados
-  // Na implementação com o back ira vir de uma chamada API
-  const [storedAreas, setStoredAreas] = useState<string[]>([
-    "Saúde Pública",
-    "Educação",
-    "Tecnologia",
-    "Meio Ambiente"
-  ]);
+  const [storedAreas, setStoredAreas] = useState<AreaAtuacao[]>([]);
+  const [isManageAreasOpen, setIsManageAreasOpen] = useState(false);
+  
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const { data } = await axios.get("http://localhost:3000/area_atuacao");
+        setStoredAreas(data); // Store the complete objects
+      } catch (error) {
+        console.error("Erro ao carregar áreas de atuação", error);
+      }
+    };
+    fetchAreas();
+  }, []);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -116,30 +127,50 @@ export default function ProjectRegistration({
     setResponsibles(responsibles.filter((_, i) => i !== index));
   };
 
-  const addArea = () => {
-    if (area && !areasList.includes(area)) {
-      setAreasList([...areasList, area]);
-      // Simulação: add também às áreas armazenadas no "banco de dados"
-      // Na implementação com o back, isso seria uma chamada API POST para salvar a nova área
-      setStoredAreas(prev => [...prev, area]);
-      setArea("");
-    }
-  };
-
-  const removeArea = (areaToRemove: string) => {
-    setAreasList(areasList.filter((a) => a !== areaToRemove));
-    // Remove também das selecionadas, se estiver lá
-    setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove));
-  };
-
-  const toggleAreaSelection = (area: string) => {
-    if (selectedAreas.includes(area)) {
-      setSelectedAreas(selectedAreas.filter(a => a !== area));
+  const addArea = async () => {
+    if (area && !storedAreas.some(a => a.area_atuacao_nome === area)) {
+      try {
+        // Call API to create a new area
+        const { data } = await axios.post("http://localhost:3000/area_atuacao", {
+          area_atuacao_nome: area
+        });
+        
+        // Add the new area to the stored areas
+        setStoredAreas([...storedAreas, data]);
+        setArea("");
+      } catch (error) {
+        console.error("Erro ao adicionar área de atuação", error);
+        alert("Erro ao adicionar área de atuação");
+      }
     } else {
-      setSelectedAreas([...selectedAreas, area]);
+      alert("Área já existe ou campo vazio");
     }
   };
 
+  const removeArea = async (areaToRemove: AreaAtuacao) => {
+    try {
+      // Call API to remove the area
+      if (areaToRemove.area_atuacao_id) {
+        await axios.delete(`http://localhost:3000/area_atuacao/${areaToRemove.area_atuacao_id}`);
+      }
+      
+      // Remove from local state
+      setStoredAreas(storedAreas.filter(a => a.area_atuacao_id !== areaToRemove.area_atuacao_id));
+      // Remove from selected areas if necessary
+      setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove.area_atuacao_nome));
+    } catch (error) {
+      console.error("Erro ao remover área de atuação", error);
+      alert("Erro ao remover área de atuação");
+    }
+  };
+
+  const toggleAreaSelection = (areaName: string) => {
+    if (selectedAreas.includes(areaName)) {
+      setSelectedAreas(selectedAreas.filter(a => a !== areaName));
+    } else {
+      setSelectedAreas([...selectedAreas, areaName]);
+    }
+  };
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -325,22 +356,32 @@ export default function ProjectRegistration({
             </div>
           </div>
 
-          {/* Áreas já cadastradas (simulando busca no banco de dados) */}
           <div className="space-y-2">
-            <Label>Áreas disponíveis</Label>
+            <div className="flex justify-between">
+              <Label>Áreas disponíveis</Label>
+              <button 
+                className="text-[#355EAF] text-[12px] cursor-pointer" 
+                onClick={() => setIsManageAreasOpen(true)}
+                type="button"
+              >
+                Gerenciar áreas disponíveis
+              </button>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {storedAreas.map((area, index) => (
+              {storedAreas.map((areaObj) => (
                 <div
-                  key={`stored-${index}`}
-                  onClick={() => toggleAreaSelection(area)}
+                  key={`stored-${areaObj.area_atuacao_id || Math.random()}`}
+                  onClick={() => toggleAreaSelection(areaObj.area_atuacao_nome)}
                   className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
-                    selectedAreas.includes(area) 
+                    selectedAreas.includes(areaObj.area_atuacao_nome) 
                       ? 'bg-green-100 border-green-500 text-green-800'
                       : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {selectedAreas.includes(area) && <Check size={14} className="text-green-600" />}
-                  <span>{area}</span>
+                  {selectedAreas.includes(areaObj.area_atuacao_nome) && 
+                    <Check size={14} className="text-green-600" />
+                  }
+                  <span>{areaObj.area_atuacao_nome}</span>
                 </div>
               ))}
             </div>
@@ -365,7 +406,13 @@ export default function ProjectRegistration({
                     <Trash2
                       size={16}
                       className="text-red-500 cursor-pointer"
-                      onClick={() => removeArea(a)}
+                      onClick={() => {
+                        // Find the area object that matches this name
+                        const areaObj = storedAreas.find(area => area.area_atuacao_nome === a);
+                        if (areaObj) {
+                          removeArea(areaObj);
+                        }
+                      }}
                     />
                   </li>
                 ))}
@@ -489,7 +536,7 @@ export default function ProjectRegistration({
               type="button"
               onClick={() => setOpen(false)}
               variant="outline"
-              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition"
+              className="px-4 py-2 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition cursor-pointer"
             >
               Cancelar
             </Button>
@@ -501,6 +548,18 @@ export default function ProjectRegistration({
             </Button>
           </div>
         </form >
+        <ManageAreasModal
+        open={isManageAreasOpen}
+        setOpen={setIsManageAreasOpen}
+        areas={storedAreas}
+        onAreasChange={(updatedAreas) => {
+          setStoredAreas(updatedAreas);
+          const updatedAreaNames = updatedAreas.map(a => a.area_atuacao_nome);
+          setSelectedAreas(prev => prev.filter(areaName => 
+            updatedAreaNames.includes(areaName)
+          ));
+        }}
+      />
       </DialogContent >
     </Dialog >
   );
