@@ -23,6 +23,7 @@ interface Tarefa {
   tarefa_data_inicio: string;
   tarefa_data_fim: string;
   tarefa_status: boolean;
+  etapa_id: number;
 }
 
 interface Subtarefa {
@@ -166,9 +167,12 @@ const ProjectTasks = () => {
       try {
         setLoading(true);
         const response = await axios.get<Etapa[]>(`http://localhost:3000/etapas/${Number(proj_id)}`);
-        const etapasComTarefas = response.data.map(etapa => ({
+        const etapasComTarefas: Etapa[] = response.data.map(etapa => ({
           ...etapa,
-          tarefas: etapa.tarefas || []
+          tarefas: (etapa.tarefas || []).map(t => ({
+            ...t,
+            etapa_id: etapa.etapa_id    // ← injeta aqui
+          }))
         }));
         setStages(etapasComTarefas);
       } catch (error) {
@@ -270,9 +274,12 @@ const ProjectTasks = () => {
     }
   };
 
-  const openTaskDetails = (task: Tarefa) => {
+  const openTaskDetails = (task: Tarefa, etapaId: number) => {
     setSelectedTask(task);
-    setEditableTask({ ...task });
+    setEditableTask({
+      ...task,
+      etapa_id: etapaId
+    });
     setIsTaskDetailsOpen(true);
     setIsEditing(false);
     setSubtasks([]);
@@ -313,6 +320,7 @@ const ProjectTasks = () => {
       data_inicio: editableTask.tarefa_data_inicio,
       data_fim: editableTask.tarefa_data_fim,
       tarefa_status: editableTask.tarefa_status,
+      etapa_id: editableTask.etapa_id
     };
 
     try {
@@ -321,11 +329,11 @@ const ProjectTasks = () => {
 
       for (const user of responsibles) {
         const relUserTarefa_data = {
-          proj_id: Number(response.data.tarefa_id),
+          tarefa_id: Number(response.data.tarefa_id),
           user_id: user?.user_id,
         };
 
-        console.log("daiodjioasd",relUserTarefa_data )
+        console.log("daiodjioasd", relUserTarefa_data)
 
         await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data)
       }
@@ -404,7 +412,7 @@ const ProjectTasks = () => {
                 stage={stage}
                 onAddTask={() => setSelectedStage(stage.etapa_id)}
                 onEditTask={(task) => {
-                  openTaskDetails(task);
+                  openTaskDetails(task, stage.etapa_id);
                   setIsEditing(true);
                 }}
                 onDeleteTask={(taskId) => {
