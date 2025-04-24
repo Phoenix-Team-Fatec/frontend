@@ -26,11 +26,6 @@ interface Tarefa {
   etapa_id: number;
 }
 
-interface Subtarefa {
-  subtarefa_id?: number;
-  subtarefa_nome: string;
-  subtarefa_concluida: boolean;
-}
 
 interface Etapa {
   etapa_id: number;
@@ -87,11 +82,9 @@ const ProjectTasks = () => {
   const [editableTask, setEditableTask] = useState<Tarefa | null>(null);
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
   const [availableUsers, setAvailableUsers] = useState<
     { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
   >([]);
-  const [newSubtaskName, setNewSubtaskName] = useState("");
   const [newResponsavel, setNewResponsavel] = useState("");
 
   useEffect(() => {
@@ -282,33 +275,10 @@ const ProjectTasks = () => {
     });
     setIsTaskDetailsOpen(true);
     setIsEditing(false);
-    setSubtasks([]);
     setResponsibles([])
   };
 
-  const addSubtask = () => {
-    if (!newSubtaskName.trim()) return;
 
-    const newSubtask: Subtarefa = {
-      subtarefa_nome: newSubtaskName,
-      subtarefa_concluida: false
-    };
-
-    setSubtasks([...subtasks, newSubtask]);
-    setNewSubtaskName("");
-  };
-
-  const removeSubtask = (index: number) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks.splice(index, 1);
-    setSubtasks(updatedSubtasks);
-  };
-
-  const toggleSubtask = (index: number) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks[index].subtarefa_concluida = !updatedSubtasks[index].subtarefa_concluida;
-    setSubtasks(updatedSubtasks);
-  };
 
   const saveTaskChanges = async () => {
     if (!editableTask) return;
@@ -497,26 +467,15 @@ const ProjectTasks = () => {
               <TaskDetails
                 availableUsers={availableUsers}
                 task={editableTask}
-                subtasks={subtasks}
                 responsaveis={responsibles}
-                newSubtaskName={newSubtaskName}
                 newResponsavel={newResponsavel}
                 isEditing={isEditing}
                 onTaskChange={(field, value) => setEditableTask({
                   ...editableTask,
                   [field]: value
                 })}
-                onAddSubtask={addSubtask}
-                onRemoveSubtask={removeSubtask}
-                onToggleSubtask={toggleSubtask}
-                onSubtaskChange={(index, value) => {
-                  const updated = [...subtasks];
-                  updated[index].subtarefa_nome = value;
-                  setSubtasks(updated);
-                }}
                 onAddResponsavel={(r) => setResponsibles([...responsibles, r])}
                 onRemoveResponsavel={(i) => setResponsibles(rs => rs.filter((_, j) => j !== i))}
-                onNewSubtaskChange={setNewSubtaskName}
                 onSave={saveTaskChanges}
                 onCancel={() => {
                   setIsEditing(false);

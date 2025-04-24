@@ -6,34 +6,26 @@ import { Label } from "@/components/ui/label";
 import { Plus, Save, X, Pen } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import axios from "axios";
 
 
-// Interfaces (pode mover para um arquivo separado types.ts se preferir)
-interface Tarefa {
-  tarefa_id: number;
-  tarefa_nome: string;
-  tarefa_descricao: string;
-  tarefa_data_inicio: string;
-  tarefa_data_fim: string;
-  tarefa_status: boolean;
+
+interface Subtarefa {
+  subtarefa_id?: number;
+  subtarefa_nome: string;
+  subtarefa_concluida: boolean;
 }
+
 
 interface TaskDetailsProps {
   task: any;
   isEditing: boolean;
-  subtasks: any[];
   responsaveis: Responsavel[];
   availableUsers: { user_id: number; user_nome: string; user_email: string; user_foto: string; }[];
-  newSubtaskName: string;
   newResponsavel: string;
   onTaskChange: (field: string, value: string | boolean) => void;
-  onAddSubtask: () => void;
-  onRemoveSubtask: (index: number) => void;
-  onToggleSubtask: (index: number) => void;
-  onSubtaskChange: (index: number, value: string) => void;
   onAddResponsavel: (r: Responsavel) => void;
   onRemoveResponsavel: (index: number) => void;
-  onNewSubtaskChange: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
@@ -49,26 +41,32 @@ interface Responsavel {
 export default function TaskDetails({
   task,
   isEditing,
-  subtasks,
   responsaveis,
-  newSubtaskName,
   availableUsers,
   newResponsavel,
   onTaskChange,
-  onAddSubtask,
-  onRemoveSubtask,
-  onToggleSubtask,
-  onSubtaskChange,
   onAddResponsavel,
   onRemoveResponsavel,
-  onNewSubtaskChange,
   onSave,
   onCancel,
   onEdit
 }: TaskDetailsProps) {
 
-  const [editTask, setEditTask] = useState<Tarefa | null>(null);
+
   const [responsibleInput, setResponsibleInput] = useState("");
+  const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
+  const [newSubtaskName, setNewSubtaskName] = useState("");
+
+  useEffect(() =>{
+    const fetchSubtasks = async () => {
+      try{
+        const {data} =  axios.get("http://localhost:3000/subtarefa/:tarefa_id")
+      }catch(error){
+        console.log(`Erro ao carregar subtarefas ${error}`)
+      }
+    }
+  })
+  
 
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<TaskDetailsProps["availableUsers"]>([]);
@@ -109,6 +107,42 @@ export default function TaskDetails({
       handleAddResponsible();
     }
   };
+
+  const addSubtask = () => {
+    if (!newSubtaskName.trim()) return;
+
+    const newSubtask: Subtarefa = {
+      subtarefa_nome: newSubtaskName,
+      subtarefa_concluida: false
+    };
+
+    
+
+
+    setSubtasks([...subtasks, newSubtask]);
+    setNewSubtaskName("");
+  };
+
+  const removeSubtask = (index: number) => {
+    const updatedSubtasks = [...subtasks];
+    updatedSubtasks.splice(index, 1);
+    setSubtasks(updatedSubtasks);
+  };
+
+  const toggleSubtask = (index: number) => {
+    const updatedSubtasks = [...subtasks];
+    updatedSubtasks[index].subtarefa_concluida = !updatedSubtasks[index].subtarefa_concluida;
+    setSubtasks(updatedSubtasks);
+  };
+
+
+  const handleSubtaskChange = (index:any, value:any) => {
+    const updated = [...subtasks];
+    updated[index].subtarefa_nome = value;
+    setSubtasks(updated);
+  }
+
+
 
   return (
 
@@ -249,19 +283,19 @@ export default function TaskDetails({
                 <Checkbox
                   id={`subtask-${index}`}
                   checked={subtask.subtarefa_concluida}
-                  onCheckedChange={() => onToggleSubtask(index)}
+                  onCheckedChange={() => toggleSubtask(index)}
                 />
                 {isEditing ? (
                   <div className="flex gap-2 w-full">
                     <Input
                       value={subtask.subtarefa_nome}
-                      onChange={(e) => onSubtaskChange(index, e.target.value)}
+                      onChange={(e) => handleSubtaskChange(index, e.target.value)}
                       className="flex-1"
                     />
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onRemoveSubtask(index)}
+                      onClick={() => removeSubtask(index)}
                     >
                       <X size={16} />
                     </Button>
@@ -285,13 +319,13 @@ export default function TaskDetails({
               <Input
                 placeholder="Adicionar sub-tarefa"
                 value={newSubtaskName}
-                onChange={(e) => onNewSubtaskChange(e.target.value)}
+                onChange={(e) => setNewSubtaskName(e.target.value)}
                 className="flex-1"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onAddSubtask}
+                onClick={addSubtask}
                 disabled={!newSubtaskName.trim()}
               >
                 <Plus size={16} className="mr-1" />
