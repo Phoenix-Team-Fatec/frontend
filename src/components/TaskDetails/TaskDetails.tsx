@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Plus, Save, X, Pen } from "lucide-react";
+import { Plus, Save, X, Pen, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import axios from "axios";
@@ -185,20 +185,56 @@ export default function TaskDetails({
     
   };
 
-  const toggleSubtask = (index: number) => {
+  const toggleSubtask = async (subtarefa_id: number) => {
     try{
 
-      
+      const subtarefa_data = {
+        subtarefa_id: subtarefa_id,
+        subtarefa_status: true
+      }
 
-      const updatedSubtasks = [...subtasks];
-      
-      updatedSubtasks[index].subtarefa_status = !updatedSubtasks[index].subtarefa_status;
+      console.log(subtarefa_data)
+
+      const response = await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data )
+
+
+      const updatedSubtasks = subtasks.map(sub =>
+        sub.subtarefa_id === subtarefa_id
+          ? { ...sub, subtarefa_status: !sub.subtarefa_status }
+          : sub
+      );
+  
       setSubtasks(updatedSubtasks);
+      
+     
+     
     }catch(error){
       console.log(`Erro ao atualizar status de subtarefa: ${error}`)
     }
  
   };
+
+  const toggleSubtaskFalse = async (subtarefa_id: number) => {
+    try {
+      const subtarefa_data = {
+        subtarefa_id,
+        subtarefa_status: false,
+      };
+  
+      await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data);
+  
+      const updatedSubtasks = subtasks.map(sub =>
+        sub.subtarefa_id === subtarefa_id
+          ? { ...sub, subtarefa_status: false }
+          : sub
+      );
+  
+      setSubtasks(updatedSubtasks);
+    } catch (error) {
+      console.log(`Erro ao atualizar status de subtarefa para false: ${error}`);
+    }
+  };
+  
 
 
   const handleSubtaskChange = (index:any, value:any) => {
@@ -342,21 +378,29 @@ export default function TaskDetails({
       <div className="max-h-[300px] overflow-y-auto">
         <Label className="block text-sm font-medium text-gray-700 mb-2">Sub-tarefas</Label>
         <div className="space-y-2">
-          {subtasks.map((subtask, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+          {subtasks.map((subtask) => (
+            <div key={subtask.subtarefa_id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
               <div className="flex items-center space-x-2 flex-grow">
                 <Checkbox
-                  id={`subtask-${index}`}
+                  id={`subtask-${subtask.subtarefa_id}`}
                   checked={subtask.subtarefa_status}
-                  onCheckedChange={() => toggleSubtask(index)}
+                  onCheckedChange={() => toggleSubtask(Number(subtask.subtarefa_id))}
                 />
                 {isEditing ? (
                   <div className="flex gap-2 w-full">
                     <Input
                       value={subtask.subtarefa_nome}
-                      onChange={(e) => handleSubtaskChange(index, e.target.value)}
+                      onChange={(e) => {handleSubtaskChange(subtask.subtarefa_id, e.target.value)}}
                       className="flex-1"
                     />
+                        <Button
+                        variant="outline"
+                        size="icon"
+                        title="Desmarcar como feita"
+                        onClick={() => toggleSubtaskFalse(Number(subtask.subtarefa_id))}
+                      >
+                        <Undo2 size={16} /> {/* Ícone de "desfazer" do Lucide */}
+                      </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -367,7 +411,7 @@ export default function TaskDetails({
                   </div>
                 ) : (
                   <Label
-                    htmlFor={`subtask-${index}`}
+                    htmlFor={`subtask-${subtask.subtarefa_id}`}
                     className={`text-sm flex-grow ${subtask.subtarefa_status
                       ? 'line-through text-gray-500 decoration-2'
                       : 'text-gray-800'
