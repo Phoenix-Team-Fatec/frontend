@@ -32,7 +32,7 @@ interface TaskDetailsProps {
   onToggleSubtask: (index: number) => void;
   onSubtaskChange: (index: number, value: string) => void;
   onAddResponsavel: (r: Responsavel) => void;
-  onRemoveResponsavel: (index: number) => void;
+  onRemoveResponsavel: (userId: number, index: number) => void;
   onNewSubtaskChange: (value: string) => void;
   onSave: () => void;
   onCancel: () => void;
@@ -226,7 +226,7 @@ export default function TaskDetails({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onRemoveResponsavel(idx)}
+                      onClick={() => onRemoveResponsavel(r.user_id!, idx)}
                     >
                       <X size={16} />
                     </Button>

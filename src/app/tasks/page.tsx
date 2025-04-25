@@ -276,12 +276,12 @@ const ProjectTasks = () => {
         prevStages.map(stage =>
           stage.etapa_id === etapaId
             ? {
-                ...stage,
-                tarefas: [
-                  ...(stage.tarefas || []),
-                  response.data
-                ]
-              }
+              ...stage,
+              tarefas: [
+                ...(stage.tarefas || []),
+                response.data
+              ]
+            }
             : stage
         )
       );
@@ -302,16 +302,25 @@ const ProjectTasks = () => {
     }
   };
 
-  const openTaskDetails = (task: Tarefa, etapaId: number) => {
-    setSelectedTask(task);
-    setEditableTask({
-      ...task,
-      etapa_id: etapaId
-    });
-    setIsTaskDetailsOpen(true);
-    setIsEditing(false);
-    setSubtasks([]);
-    setResponsibles([]);
+  const openTaskDetails = async (task: Tarefa, etapaId: number) => {
+    setLoading(true);
+    try {
+      setSelectedTask(task);
+      setEditableTask({
+        ...task,
+        etapa_id: etapaId
+      });
+      const { data } = await axios.get<{ user_id: number; user_email: string; user_nome: string; user_foto: string }[]>(`http://localhost:3000/tarefa_usuario/user/associated/${task.tarefa_id}`);
+      setIsTaskDetailsOpen(true);
+      setIsEditing(false);
+      setSubtasks([]);
+      setResponsibles(data.map(u => ({ email: u.user_email, user_id: u.user_id })));
+    } catch (err) {
+      console.error("Erro ao carregar responsáveis:", err);
+      showNotification("Não foi possível carregar responsáveis", false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addSubtask = () => {
@@ -412,6 +421,22 @@ const ProjectTasks = () => {
   }
 
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
+
+  const removeResponsavel = async (tarefaId: number, userId: number, index: number) => {
+    try {
+      setLoading(true);
+      await axios.delete(
+        `http://localhost:3000/tarefa_usuario/remove/user/${tarefaId}/${userId}`
+      );
+      setResponsibles(rs => rs.filter((_, i) => i !== index));
+      toast.success("Responsável removido com sucesso");
+    } catch (err) {
+      console.error("Erro ao remover responsável:", err);
+      toast.error("Não foi possível remover responsável");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -578,6 +603,7 @@ const ProjectTasks = () => {
                 responsaveis={responsibles}
                 newSubtaskName={newSubtaskName}
                 newResponsavel={newResponsavel}
+                onRemoveResponsavel={(userId, idx) => removeResponsavel(editableTask!.tarefa_id, userId, idx)}
                 isEditing={isEditing}
                 onTaskChange={(field, value) => setEditableTask({
                   ...editableTask,
@@ -592,7 +618,6 @@ const ProjectTasks = () => {
                   setSubtasks(updated);
                 }}
                 onAddResponsavel={(r) => setResponsibles([...responsibles, r])}
-                onRemoveResponsavel={(i) => setResponsibles(rs => rs.filter((_, j) => j !== i))}
                 onNewSubtaskChange={setNewSubtaskName}
                 onSave={saveTaskChanges}
                 onCancel={() => {
