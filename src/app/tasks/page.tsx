@@ -61,6 +61,7 @@ const ProjectTasks = () => {
     tarefa_status: false
   };
 
+
   const [newStage, setNewStage] = useState(initialStageState);
   const [selectedStage, setSelectedStage] = useState<number | null>(null);
   const [newTask, setNewTask] = useState(initialTaskState);
@@ -79,6 +80,7 @@ const ProjectTasks = () => {
     { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
   >([]);
   const [newResponsavel, setNewResponsavel] = useState("");
+  const [projectName, setProjectName] = useState("");
 
   useEffect(() => {
     const userData = getUserData();
@@ -93,7 +95,9 @@ const ProjectTasks = () => {
     async function fetchData() {
       try {
         const response = await axios.get(`http://localhost:3000/relUserProj/getUsers/${Number(proj_id)}`);
+        const project = await axios.get(`http://localhost:3000/projeto/getById/${Number(proj_id)}`);
         setAvailableUsers(response.data);
+        setProjectName(project.data.proj_nome);
       } catch (error) {
         console.error("Error trying to get users in the project", error);
       }
@@ -419,7 +423,15 @@ const ProjectTasks = () => {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className={`w-full p-8 ${contentMargin}`}>
-        <h2 className="text-2xl font-bold text-gray-800">Etapas do Projeto</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Etapas do projeto {projectName}</h2>
+        <Button 
+          onClick={() => setIsStageDialogOpen(true)} 
+          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-10 px-4 rounded-lg shadow-md"
+        >
+          + Criar Nova Etapa
+        </Button>
+      </div>
         <div className="pr-8">
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
@@ -453,29 +465,6 @@ const ProjectTasks = () => {
                       />
                     </div>
                   ))}
-                  <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
-                    <DialogTrigger asChild>
-                      <div className="flex items-center justify-center h-full w-[300px] inline-block">
-                        <Button
-                          onClick={() => setIsStageDialogOpen(true)}
-                          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md"
-                        >
-                          + Criar Nova Etapa
-                        </Button>
-                      </div>
-                    </DialogTrigger>
-                    <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
-                      <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
-                      </DialogHeader>
-                      <StageForm
-                        stage={newStage}
-                        onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
-                        onSubmit={createStage}
-                        isSubmitting={loading}
-                      />
-                    </DialogContent>
-                  </Dialog>
                 </div>
                 <ScrollBar orientation="horizontal" />
               </ScrollArea>
@@ -501,16 +490,6 @@ const ProjectTasks = () => {
                   />
                 ))}
                 <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
-                  <DialogTrigger asChild>
-                    <div className="flex items-center justify-center h-full">
-                      <Button
-                        onClick={() => setIsStageDialogOpen(true)}
-                        className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md"
-                      >
-                        + Criar Nova Etapa
-                      </Button>
-                    </div>
-                  </DialogTrigger>
                   <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
                     <DialogHeader>
                       <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
