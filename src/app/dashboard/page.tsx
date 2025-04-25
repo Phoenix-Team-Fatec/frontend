@@ -64,6 +64,8 @@ export default function Dashboard() {
       const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjs/${userId}`);
       
       const projetos = Array.isArray(data) ? data : [];
+
+      console.log(projetos)
     
       
       const coordProjs = projetos.filter(projeto => 
