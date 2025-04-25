@@ -3,34 +3,28 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Plus, Save, X, Pen } from "lucide-react";
+import { Plus, Save, X, Pen, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import axios from "axios";
 
 
-// Interfaces (pode mover para um arquivo separado types.ts se preferir)
-interface Tarefa {
-  tarefa_id: number;
-  tarefa_nome: string;
-  tarefa_descricao: string;
-  tarefa_data_inicio: string;
-  tarefa_data_fim: string;
-  tarefa_status: boolean;
+
+interface Subtarefa {
+  subtarefa_id?: number;
+  subtarefa_nome: string;
+  subtarefa_status: boolean;
+  tarefa_id:number
 }
+
 
 interface TaskDetailsProps {
   task: any;
   isEditing: boolean;
-  subtasks: any[];
   responsaveis: Responsavel[];
   availableUsers: { user_id: number; user_nome: string; user_email: string; user_foto: string; }[];
-  newSubtaskName: string;
   newResponsavel: string;
   onTaskChange: (field: string, value: string | boolean) => void;
-  onAddSubtask: () => void;
-  onRemoveSubtask: (index: number) => void;
-  onToggleSubtask: (index: number) => void;
-  onSubtaskChange: (index: number, value: string) => void;
   onAddResponsavel: (r: Responsavel) => void;
   onRemoveResponsavel: (userId: number, index: number) => void;
   onNewSubtaskChange: (value: string) => void;
@@ -49,26 +43,51 @@ interface Responsavel {
 export default function TaskDetails({
   task,
   isEditing,
-  subtasks,
   responsaveis,
-  newSubtaskName,
   availableUsers,
   newResponsavel,
   onTaskChange,
-  onAddSubtask,
-  onRemoveSubtask,
-  onToggleSubtask,
-  onSubtaskChange,
   onAddResponsavel,
   onRemoveResponsavel,
-  onNewSubtaskChange,
   onSave,
   onCancel,
   onEdit
 }: TaskDetailsProps) {
 
-  const [editTask, setEditTask] = useState<Tarefa | null>(null);
+
   const [responsibleInput, setResponsibleInput] = useState("");
+  const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
+  const [newSubtaskName, setNewSubtaskName] = useState("");
+
+  useEffect(() =>{
+    const fetchSubtasks = async () => {
+      try{
+
+        const tarefa_id = task.tarefa_id
+
+        const {data} =  await axios.get(`http://localhost:3000/subtarefa/${tarefa_id}`)
+        
+        const formated_subtarefas = data.map((subtarefa:any) => ({
+            subtarefa_id: subtarefa.subtarefa_id,
+            subtarefa_nome: subtarefa.subtarefa_nome,
+            subtarefa_status: subtarefa.subtarefa_status
+        }));
+
+        console.log(formated_subtarefas)
+        if (formated_subtarefas){
+          setSubtasks(formated_subtarefas)
+        }else{
+          setSubtasks([])
+        }
+          
+
+      }catch(error){
+        console.log(`Erro ao carregar subtarefas ${error}`)
+      }
+    }
+    fetchSubtasks();
+  },[])
+  
 
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<TaskDetailsProps["availableUsers"]>([]);
@@ -109,6 +128,123 @@ export default function TaskDetails({
       handleAddResponsible();
     }
   };
+
+  const addSubtask = async () => {
+    if (!newSubtaskName.trim()) return;
+
+    try{  
+      const newSubtask = {
+        nome: newSubtaskName,
+        // descricao: "descricao",
+        // data_inicio: "1999-01-01",
+        // data_fim: "1999-01-01",
+        subtarefa_status: false,
+        tarefa_id: task.tarefa_id
+      };
+
+  
+      console.log(newSubtask)
+
+      const response = await axios.post("http://localhost:3000/subtarefa", newSubtask)
+      const subTarefaId = response.data.subtarefa_id
+
+      const {data} = await axios.get(`http://localhost:3000/tarefa/${task.tarefa_id}`)
+
+      
+
+      const ids_users = data[0]?.usuarios?.map((user: any) => user.user_id);
+
+
+      console.log(ids_users)
+
+      for(let id of ids_users){
+        const relSubTarefaData = {
+          user_id: id,
+          subtarefa_id: subTarefaId 
+        }
+
+        await axios.post("http://localhost:3000/subtarefa_usuario/associate", relSubTarefaData)
+      }
+  
+      setSubtasks(prev => [...prev, response.data]);
+      setNewSubtaskName("");
+    }catch(error){
+      console.log(`Erro ao criar tarefa: ${error}`)
+    }
+  };
+
+  const removeSubtask = async (subtarefa_id: number) => {
+
+    try{
+
+        const response = await axios.delete(`http://localhost:3000/subtarefa/${subtarefa_id}`)
+
+        setSubtasks(prev => prev.filter(subtarefa => subtarefa.subtarefa_id != subtarefa_id))
+    }catch(error){
+      console.log(`Erro ao excluir subtarefa`)
+    }
+    
+  };
+
+  const toggleSubtask = async (subtarefa_id: number) => {
+    try{
+
+      const subtarefa_data = {
+        subtarefa_id: subtarefa_id,
+        subtarefa_status: true
+      }
+
+      console.log(subtarefa_data)
+
+      const response = await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data )
+
+
+      const updatedSubtasks = subtasks.map(sub =>
+        sub.subtarefa_id === subtarefa_id
+          ? { ...sub, subtarefa_status: !sub.subtarefa_status }
+          : sub
+      );
+  
+      setSubtasks(updatedSubtasks);
+      
+     
+     
+    }catch(error){
+      console.log(`Erro ao atualizar status de subtarefa: ${error}`)
+    }
+ 
+  };
+
+  const toggleSubtaskFalse = async (subtarefa_id: number) => {
+    try {
+      const subtarefa_data = {
+        subtarefa_id,
+        subtarefa_status: false,
+      };
+  
+      await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data);
+  
+      const updatedSubtasks = subtasks.map(sub =>
+        sub.subtarefa_id === subtarefa_id
+          ? { ...sub, subtarefa_status: false }
+          : sub
+      );
+  
+      setSubtasks(updatedSubtasks);
+    } catch (error) {
+      console.log(`Erro ao atualizar status de subtarefa para false: ${error}`);
+    }
+  };
+  
+
+
+  const handleSubtaskChange = (index:any, value:any) => {
+    const updated = [...subtasks];
+    updated[index].subtarefa_nome = value;
+    setSubtasks(updated);
+  }
+
+
 
   return (
 
@@ -243,33 +379,41 @@ export default function TaskDetails({
       <div className="max-h-[300px] overflow-y-auto">
         <Label className="block text-sm font-medium text-gray-700 mb-2">Sub-tarefas</Label>
         <div className="space-y-2">
-          {subtasks.map((subtask, index) => (
-            <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+          {subtasks.map((subtask) => (
+            <div key={subtask.subtarefa_id} className="flex items-center justify-between bg-gray-50 p-2 rounded">
               <div className="flex items-center space-x-2 flex-grow">
                 <Checkbox
-                  id={`subtask-${index}`}
-                  checked={subtask.subtarefa_concluida}
-                  onCheckedChange={() => onToggleSubtask(index)}
+                  id={`subtask-${subtask.subtarefa_id}`}
+                  checked={subtask.subtarefa_status}
+                  onCheckedChange={() => toggleSubtask(Number(subtask.subtarefa_id))}
                 />
                 {isEditing ? (
                   <div className="flex gap-2 w-full">
                     <Input
                       value={subtask.subtarefa_nome}
-                      onChange={(e) => onSubtaskChange(index, e.target.value)}
+                      onChange={(e) => {handleSubtaskChange(subtask.subtarefa_id, e.target.value)}}
                       className="flex-1"
                     />
+                        <Button
+                        variant="outline"
+                        size="icon"
+                        title="Desmarcar como feita"
+                        onClick={() => toggleSubtaskFalse(Number(subtask.subtarefa_id))}
+                      >
+                        <Undo2 size={16} /> {/* Ícone de "desfazer" do Lucide */}
+                      </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => onRemoveSubtask(index)}
+                      onClick={() => removeSubtask(Number(subtask.subtarefa_id))}
                     >
                       <X size={16} />
                     </Button>
                   </div>
                 ) : (
                   <Label
-                    htmlFor={`subtask-${index}`}
-                    className={`text-sm flex-grow ${subtask.subtarefa_concluida
+                    htmlFor={`subtask-${subtask.subtarefa_id}`}
+                    className={`text-sm flex-grow ${subtask.subtarefa_status
                       ? 'line-through text-gray-500 decoration-2'
                       : 'text-gray-800'
                       }`}
@@ -285,13 +429,13 @@ export default function TaskDetails({
               <Input
                 placeholder="Adicionar sub-tarefa"
                 value={newSubtaskName}
-                onChange={(e) => onNewSubtaskChange(e.target.value)}
+                onChange={(e) => setNewSubtaskName(e.target.value)}
                 className="flex-1"
               />
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onAddSubtask}
+                onClick={addSubtask}
                 disabled={!newSubtaskName.trim()}
               >
                 <Plus size={16} className="mr-1" />

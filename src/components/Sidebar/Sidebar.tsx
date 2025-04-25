@@ -100,12 +100,12 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 <Briefcase size={20} />
               </Button>
             </Link>
-            <Link href="/tasks">
+            <Link href="/my-tasks">
               <Button 
                 variant="ghost"
                 size="icon"
                 className={`hover:text-[#C5D8FF] hover:bg-transparent cursor-pointer ${
-                  pathname === "/tasks" ? "text-[#C5D8FF]" : "text-white"
+                  pathname === "/my-tasks" ? "text-[#C5D8FF]" : "text-white"
                 }`}
               >
                 <ListTodo size={20} />
@@ -127,11 +127,11 @@ const Sidebar = ({ isOpen, setIsOpen }: SidebarProps) => {
                 Meus Projetos
               </Button>
             </Link>
-            <Link href="/tasks" className="w-full">
+            <Link href="/my-tasks" className="w-full">
               <Button 
                 variant="ghost"
                 className={`cursor-pointer w-full justify-start hover:text-[#C5D8FF] hover:bg-transparent ${
-                  pathname === "/tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
+                  pathname === "/my-tasks" ? "text-[#C5D8FF] font-bold" : "text-white"
                 }`}
               >
                 <ListTodo className="mr-2" size={18} />
