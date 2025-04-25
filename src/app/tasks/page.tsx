@@ -74,15 +74,10 @@ const ProjectTasks = () => {
   const [editableTask, setEditableTask] = useState<Tarefa | null>(null);
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-<<<<<<< HEAD
-  const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<{ user_id: number; user_nome: string; user_email: string; user_foto: string; }[]>([]);
   const [newSubtaskName, setNewSubtaskName] = useState("");
-=======
   const [availableUsers, setAvailableUsers] = useState<
     { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
   >([]);
->>>>>>> feature/crud_subtarefas
   const [newResponsavel, setNewResponsavel] = useState("");
 
   useEffect(() => {
