@@ -1,7 +1,12 @@
+
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import TaskCard from "../TaskCard/TaskCard";
-import { Trash2 } from "lucide-react"; // Importando o ícone de lixeira
+import { Trash2, Pencil } from "lucide-react";
+import { EditStageModal } from "../EditStageModal/EditStageModal";
 
 interface StageCardProps {
   stage: {
@@ -21,7 +26,8 @@ interface StageCardProps {
   onEditTask: (task: any) => void;
   onDeleteTask: (taskId: number) => void;
   onOpenTaskDetails: (task: any) => void;
-  onDeleteStage: (stageId: number) => void; // Nova prop para deletar etapa
+  onDeleteStage: (stageId: number) => void;
+  onEditStage: (stageId: number, newName: string, newDescription: string) => void;
 }
 
 export default function StageCard({
@@ -30,8 +36,10 @@ export default function StageCard({
   onEditTask,
   onDeleteTask,
   onOpenTaskDetails,
-  onDeleteStage, // Recebendo a prop
+  onDeleteStage,
+  onEditStage,
 }: StageCardProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const totalTarefas = stage.tarefas?.length || 0;
   const tarefasConcluidas = stage.tarefas?.filter(t => t.tarefa_status)?.length || 0;
   const percentual = totalTarefas > 0 ? Math.round((tarefasConcluidas / totalTarefas) * 100) : 0;
@@ -40,16 +48,35 @@ export default function StageCard({
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full border border-gray-200">
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-xl font-semibold text-[#355EAF]">{stage.etapa_nome}</h3>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => onDeleteStage(stage.etapa_id)}
-          className="text-gray-500 hover:text-red-500 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setIsEditModalOpen(true)}
+            className="text-gray-500 hover:text-[#355EAF] hover:bg-[#355EAF]/10"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onDeleteStage(stage.etapa_id)}
+            className="text-gray-500 hover:text-red-500 hover:bg-red-50"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
+      {/* Modal de edição */}
+      <EditStageModal
+        stage={stage}
+        onSave={onEditStage}
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+      />
+
+      {/* Resto do componente */}
       {stage.etapa_descricao && (
         <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
       )}

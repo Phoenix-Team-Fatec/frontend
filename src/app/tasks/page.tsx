@@ -6,16 +6,14 @@ import axios from 'axios';
 import { getUserData } from "@/utils/auth";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import Sidebar from "@/components/Sidebar/Sidebar";
-import { Trash2, Pen, Plus, X, Save } from "lucide-react";
-// Componentes modularizados
 import StageCard from "@/components/StageCard/StageCard";
 import StageForm from "@/components/StageForm/StageForm";
 import TaskForm from "@/components/TaskForm/TaskForm";
 import TaskDetails from "@/components/TaskDetails/TaskDetails";
 
-// Interfaces (pode mover para um arquivo separado types.ts se preferir)
 interface Tarefa {
   tarefa_id: number;
   tarefa_nome: string;
@@ -73,24 +71,16 @@ const ProjectTasks = () => {
   const [newTask, setNewTask] = useState(initialTaskState);
   const [isStageDialogOpen, setIsStageDialogOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [responsibles, setResponsibles] = useState<
-    { email: string; user_id?: number }[]
-  >([]);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<
-    { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
-  >([]);
+  const [responsibles, setResponsibles] = useState<{ email: string; user_id?: number }[]>([]);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<{ user_id: number; user_nome: string; user_email: string; user_foto: string; }[]>([]);
   const [responsibleInput, setResponsibleInput] = useState("");
   const router = useRouter();
-
-  // Estados para o modal de detalhes da tarefa
   const [selectedTask, setSelectedTask] = useState<Tarefa | null>(null);
   const [editableTask, setEditableTask] = useState<Tarefa | null>(null);
   const [isTaskDetailsOpen, setIsTaskDetailsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
-  const [availableUsers, setAvailableUsers] = useState<
-    { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
-  >([]);
+  const [availableUsers, setAvailableUsers] = useState<{ user_id: number; user_nome: string; user_email: string; user_foto: string; }[]>([]);
   const [newSubtaskName, setNewSubtaskName] = useState("");
   const [newResponsavel, setNewResponsavel] = useState("");
 
@@ -106,14 +96,14 @@ const ProjectTasks = () => {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await axios.get(`http://localhost:3000/relUserProj/getUsers/${Number(proj_id)}`)
-        setAvailableUsers(response.data)
+        const response = await axios.get(`http://localhost:3000/relUserProj/getUsers/${Number(proj_id)}`);
+        setAvailableUsers(response.data);
       } catch (error) {
-        console.error("Error trying to get users in the project", error)
+        console.error("Error trying to get users in the project", error);
       }
     }
-    fetchData()
-  }, [proj_id])
+    fetchData();
+  }, [proj_id]);
 
   const handleResponsibleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -131,11 +121,11 @@ const ProjectTasks = () => {
 
   const showNotification = (message: string, success: boolean) => {
     if (success) {
-      toast.success(message)
+      toast.success(message);
     } else {
-      toast.error(message)
+      toast.error(message);
     }
-  }
+  };
 
   useEffect(() => {
     if (!isStageDialogOpen) {
@@ -159,7 +149,6 @@ const ProjectTasks = () => {
     }
   }, []);
 
-  // Efeito principal para carregar as etapas
   useEffect(() => {
     if (!initialized || !authChecked || !proj_id) return;
 
@@ -171,7 +160,7 @@ const ProjectTasks = () => {
           ...etapa,
           tarefas: (etapa.tarefas || []).map(t => ({
             ...t,
-            etapa_id: etapa.etapa_id    // ← injeta aqui
+            etapa_id: etapa.etapa_id
           }))
         }));
         setStages(etapasComTarefas);
@@ -206,7 +195,6 @@ const ProjectTasks = () => {
       };
 
       const response = await axios.post(`http://localhost:3000/etapas`, etapaData);
-
       setStages(prev => [...prev, { ...response.data, tarefas: [] }]);
       setNewStage(initialStageState);
       setIsStageDialogOpen(false);
@@ -214,6 +202,47 @@ const ProjectTasks = () => {
     } catch (error) {
       console.error("Erro ao criar etapa:", error);
       showNotification("Erro ao criar etapa. Verifique os dados e tente novamente.", false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const editStage = async (stageId: number, newName: string, newDescription: string) => {
+    try {
+      setLoading(true);
+      const response = await axios.put(`http://localhost:3000/etapas`, {
+        etapa_id: stageId,
+        etapa_nome: newName,
+        etapa_descricao: newDescription
+      });
+
+      setStages(prevStages =>
+        prevStages.map(stage =>
+          stage.etapa_id === stageId
+            ? { ...stage, etapa_nome: newName, etapa_descricao: newDescription }
+            : stage
+        )
+      );
+      showNotification("Etapa atualizada com sucesso!", true);
+    } catch (error) {
+      console.error("Erro ao atualizar etapa:", error);
+      showNotification("Erro ao atualizar etapa. Tente novamente.", false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteStage = async (stageId: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta etapa e todas suas tarefas?")) return;
+
+    try {
+      setLoading(true);
+      await axios.delete(`http://localhost:3000/etapas/${stageId}`);
+      setStages(prevStages => prevStages.filter(stage => stage.etapa_id !== stageId));
+      showNotification("Etapa excluída com sucesso!", true);
+    } catch (error) {
+      console.error("Erro ao excluir etapa:", error);
+      showNotification("Erro ao excluir etapa. Tente novamente.", false);
     } finally {
       setLoading(false);
     }
@@ -240,20 +269,19 @@ const ProjectTasks = () => {
           proj_id: Number(response.data.tarefa_id),
           user_id: user?.user_id,
         };
-
-        await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data)
+        await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data);
       }
 
       setStages(prevStages =>
         prevStages.map(stage =>
           stage.etapa_id === etapaId
             ? {
-              ...stage,
-              tarefas: [
-                ...(stage.tarefas || []),
-                response.data
-              ]
-            }
+                ...stage,
+                tarefas: [
+                  ...(stage.tarefas || []),
+                  response.data
+                ]
+              }
             : stage
         )
       );
@@ -283,17 +311,15 @@ const ProjectTasks = () => {
     setIsTaskDetailsOpen(true);
     setIsEditing(false);
     setSubtasks([]);
-    setResponsibles([])
+    setResponsibles([]);
   };
 
   const addSubtask = () => {
     if (!newSubtaskName.trim()) return;
-
     const newSubtask: Subtarefa = {
       subtarefa_nome: newSubtaskName,
       subtarefa_concluida: false
     };
-
     setSubtasks([...subtasks, newSubtask]);
     setNewSubtaskName("");
   };
@@ -332,10 +358,7 @@ const ProjectTasks = () => {
           tarefa_id: Number(response.data.tarefa_id),
           user_id: user?.user_id,
         };
-
-        console.log("daiodjioasd", relUserTarefa_data)
-
-        await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data)
+        await axios.post(`http://localhost:3000/tarefa_usuario/associate`, relUserTarefa_data);
       }
 
       setStages(prevStages =>
@@ -405,48 +428,102 @@ const ProjectTasks = () => {
             <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
           </div>
         ) : stages.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-            {stages.map((stage) => (
-              <StageCard
-                key={stage.etapa_id}
-                stage={stage}
-                onAddTask={() => setSelectedStage(stage.etapa_id)}
-                onEditTask={(task) => {
-                  openTaskDetails(task, stage.etapa_id);
-                  setIsEditing(true);
-                }}
-                onDeleteTask={(taskId) => {
-                  if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
-                    deleteTask(taskId);
-                  }
-                }}
-                onOpenTaskDetails={openTaskDetails}
-              />
-            ))}
-
-            <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
-              <DialogTrigger asChild>
-                <div className="flex items-center justify-center h-full">
-                  <Button
-                    onClick={() => setIsStageDialogOpen(true)}
-                    className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md"
-                  >
-                    + Criar Nova Etapa
-                  </Button>
+          <div className="mt-6">
+            {stages.length > 4 ? (
+              <ScrollArea className="w-full whitespace-nowrap">
+                <div className="flex w-max space-x-6 pb-4">
+                  {stages.map((stage) => (
+                    <div key={stage.etapa_id} className="w-[300px] inline-block">
+                      <StageCard
+                        stage={stage}
+                        onAddTask={() => setSelectedStage(stage.etapa_id)}
+                        onEditTask={(task) => {
+                          openTaskDetails(task, stage.etapa_id);
+                          setIsEditing(true);
+                        }}
+                        onDeleteTask={(taskId) => {
+                          if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+                            deleteTask(taskId);
+                          }
+                        }}
+                        onOpenTaskDetails={openTaskDetails}
+                        onDeleteStage={deleteStage}
+                        onEditStage={editStage}
+                      />
+                    </div>
+                  ))}
+                  <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
+                    <DialogTrigger asChild>
+                      <div className="flex items-center justify-center h-full w-[300px] inline-block">
+                        <Button
+                          onClick={() => setIsStageDialogOpen(true)}
+                          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md"
+                        >
+                          + Criar Nova Etapa
+                        </Button>
+                      </div>
+                    </DialogTrigger>
+                    <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+                      <DialogHeader>
+                        <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
+                      </DialogHeader>
+                      <StageForm
+                        stage={newStage}
+                        onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
+                        onSubmit={createStage}
+                        isSubmitting={loading}
+                      />
+                    </DialogContent>
+                  </Dialog>
                 </div>
-              </DialogTrigger>
-              <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
-                </DialogHeader>
-                <StageForm
-                  stage={newStage}
-                  onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
-                  onSubmit={createStage}
-                  isSubmitting={loading}
-                />
-              </DialogContent>
-            </Dialog>
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {stages.map((stage) => (
+                  <StageCard
+                    key={stage.etapa_id}
+                    stage={stage}
+                    onAddTask={() => setSelectedStage(stage.etapa_id)}
+                    onEditTask={(task) => {
+                      openTaskDetails(task, stage.etapa_id);
+                      setIsEditing(true);
+                    }}
+                    onDeleteTask={(taskId) => {
+                      if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+                        deleteTask(taskId);
+                      }
+                    }}
+                    onOpenTaskDetails={openTaskDetails}
+                    onDeleteStage={deleteStage}
+                    onEditStage={editStage}
+                  />
+                ))}
+                <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
+                  <DialogTrigger asChild>
+                    <div className="flex items-center justify-center h-full">
+                      <Button
+                        onClick={() => setIsStageDialogOpen(true)}
+                        className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-16 w-full rounded-lg shadow-md"
+                      >
+                        + Criar Nova Etapa
+                      </Button>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Criar Nova Etapa</DialogTitle>
+                    </DialogHeader>
+                    <StageForm
+                      stage={newStage}
+                      onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
+                      onSubmit={createStage}
+                      isSubmitting={loading}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)]">
