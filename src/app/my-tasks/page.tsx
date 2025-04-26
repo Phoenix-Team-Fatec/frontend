@@ -2,13 +2,28 @@
 import { useState, useEffect } from 'react';
 import { Search, Grid, List, Filter } from 'lucide-react';
 import Sidebar from '@/components/Sidebar/Sidebar';
+import axios from 'axios';
+import { getUserData } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+
+interface Etapa {
+  etapa_id: number;
+  etapa_nome: string;
+}
 
 interface Task {
-  id: string;
-  status: 'Paid' | 'Pending' | 'Unpaid';
-  projeto: string;
-  orcamento: number;
-  dataLimite: string;
+  tarefa_id: number;
+  tarefa_nome: string;
+  tarefa_descricao: string;
+  tarefa_data_inicio: string;
+  tarefa_data_fim: string;
+  tarefa_status: boolean;
+  etapa: Etapa;
+  usuarios?: Array<{
+    user_nome: string;
+    user_email: string;
+  }>;
 }
 
 export default function Home() {
@@ -18,56 +33,79 @@ export default function Home() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterBy, setFilterBy] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async () => {
+    const userData = getUserData();
+    if (!userData) {
+      router.push('/sign-in');
+      return;
+    }
 
-            {/* a conexão com o bd tem que subistituir isso aqui */}
-
-      const data: Task[] = [
-        { id: 'INV001', status: 'Paid', projeto: 'Credit Card', orcamento: 250.0, dataLimite: '27/02/25' },
-        { id: 'INV002', status: 'Pending', projeto: 'PayPal', orcamento: 150.0, dataLimite: '28/02/12' },
-        { id: 'INV003', status: 'Unpaid', projeto: 'Bank Transfer', orcamento: 350.0, dataLimite: '27/02/25' },
-        { id: 'INV004', status: 'Paid', projeto: 'Credit Card', orcamento: 450.0, dataLimite: '28/02/12' },
-        { id: 'INV005', status: 'Paid', projeto: 'PayPal', orcamento: 550.0, dataLimite: '27/02/25' },
-        { id: 'INV006', status: 'Pending', projeto: 'Bank Transfer', orcamento: 200.0, dataLimite: '28/02/12' },
-        { id: 'INV007', status: 'Unpaid', projeto: 'Credit Card', orcamento: 300.0, dataLimite: '27/02/25' },
-      ];
-      setTasks(data);
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`http://localhost:3000/tarefa_usuario/${userData.user_id}`);
+        
+        const tasksWithEtapa = response.data.map((task: any) => ({
+          ...task,
+          etapa: task.etapa ? {
+            etapa_id: task.etapa.etapa_id,
+            etapa_nome: task.etapa.etapa_nome
+          } : {
+            etapa_id: 0,
+            etapa_nome: 'Sem etapa'
+          },
+          tarefa_data_inicio: formatDate(task.tarefa_data_inicio),
+          tarefa_data_fim: formatDate(task.tarefa_data_fim)
+        }));
+    
+        setTasks(tasksWithEtapa);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        toast.error('Erro ao carregar tarefas');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
-  }, []);
+    fetchTasks();
+  }, [router]);
 
-  const total = tasks.reduce((sum, task) => sum + task.orcamento, 0);
+  const formatDate = (dateString: string | Date) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
 
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       searchTerm === '' ||
-      Object.values(task).some((value) =>
-        value.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      task.tarefa_nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.etapa.etapa_nome.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFilter =
       filterBy === '' ||
-      task.status.toLowerCase() === filterBy.toLowerCase() ||
-      task.projeto.toLowerCase() === filterBy.toLowerCase();
+      (task.tarefa_status ? 'Concluída' : 'Pendente').toLowerCase() === filterBy.toLowerCase();
 
     return matchesSearch && matchesFilter;
   });
 
   const filterOptions: string[] = [
-    'Status',
-    'Projeto',
-    'ID',
-    'Data Limite',
-    'Paid',
-    'Pending',
-    'Unpaid',
-    'Credit Card',
-    'PayPal',
-    'Bank Transfer',
+    'Concluída',
+    'Pendente'
   ];
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-white">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-[#355EAF] animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -85,9 +123,9 @@ export default function Home() {
         <div className="max-w-8xl mx-5 p-4">
           <h1 className="text-2xl font-bold text-gray-700 mt-5 mb-2">Minhas Tarefas</h1>
           
-        <div className="pr-1">
-          <hr className="border-t-2 border-[#C4D8FF] my-4" />
-        </div>
+          <div className="pr-1">
+            <hr className="border-t-2 border-[#C4D8FF] my-4" />
+          </div>
 
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -169,42 +207,35 @@ export default function Home() {
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Projeto</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orçamento</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefa</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Etapa</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Limite</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredTasks.map((task) => (
-                      <tr key={task.id}>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{task.id}</td>
+                      <tr key={task.tarefa_id}>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{task.tarefa_id}</td>
                         <td className="px-6 py-4 text-sm">
                           <span
                             className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                             ${
-                              task.status === 'Paid'
+                              task.tarefa_status
                                 ? 'bg-green-100 text-green-800'
-                                : task.status === 'Pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
+                                : 'bg-yellow-100 text-yellow-800'
                             }`}
                           >
-                            {task.status}
+                            {task.tarefa_status ? 'Concluída' : 'Pendente'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{task.projeto}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">${task.orcamento.toFixed(2)}</td>
-                        <td className="px-6 py-4 text-sm text-gray-500">{task.dataLimite}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_nome}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{task.etapa.etapa_nome}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_data_inicio}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_data_fim}</td>
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-gray-200">
-                      <td className="px-6 py-4 text-sm font-bold">Total</td>
-                      <td colSpan={3} className="px-6 py-4 text-sm font-bold text-right">${total.toFixed(2)}</td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
                 </table>
               </div>
             </div>
@@ -214,39 +245,44 @@ export default function Home() {
           {view === 'grid' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTasks.map((task) => (
-                <div key={task.id} className="bg-white p-4 rounded-lg shadow">
+                <div key={task.tarefa_id} className="bg-white p-4 rounded-lg shadow">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="font-bold">{task.id}</span>
+                    <span className="font-bold">#{task.tarefa_id}</span>
                     <span
                       className={`px-2 py-1 text-xs font-semibold rounded-full 
                       ${
-                        task.status === 'Paid'
+                        task.tarefa_status
                           ? 'bg-green-100 text-green-800'
-                          : task.status === 'Pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
+                          : 'bg-yellow-100 text-yellow-800'
                       }`}
                     >
-                      {task.status}
+                      {task.tarefa_status ? 'Concluída' : 'Pendente'}
                     </span>
                   </div>
+                  <h3 className="font-medium text-lg mb-1">{task.tarefa_nome}</h3>
                   <div className="text-sm text-gray-600 mb-1">
-                    <span className="font-medium">Projeto:</span> {task.projeto}
+                    <span className="font-medium">Etapa:</span> {task.etapa.etapa_nome}
                   </div>
                   <div className="text-sm text-gray-600 mb-1">
-                    <span className="font-medium">Orçamento:</span> ${task.orcamento.toFixed(2)}
+                    <span className="font-medium">Início:</span> {task.tarefa_data_inicio}
                   </div>
                   <div className="text-sm text-gray-600">
-                    <span className="font-medium">Data Limite:</span> {task.dataLimite}
+                    <span className="font-medium">Limite:</span> {task.tarefa_data_fim}
                   </div>
+                  {task.usuarios && task.usuarios.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <span className="text-xs font-medium text-gray-500">Responsáveis:</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {task.usuarios.map((user, index) => (
+                          <span key={index} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            {user.user_nome}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
-              <div className="bg-gray-50 p-4 rounded-lg shadow col-span-full">
-                <div className="flex justify-between items-center">
-                  <span className="font-bold">Total</span>
-                  <span className="font-bold">${total.toFixed(2)}</span>
-                </div>
-              </div>
             </div>
           )}
         </div>
