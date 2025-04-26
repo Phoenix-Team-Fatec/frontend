@@ -379,6 +379,7 @@ export default function Dashboard() {
                     fetchProjectData={fetchProjetos}
                     onNotify={showNotification}
                     className="hover:shadow-lg transition-shadow duration-300"
+                    proj_valor_total={project.projeto_proj_valor_total}
                   />
                 </div>
               ))}

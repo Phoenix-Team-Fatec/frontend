@@ -21,6 +21,8 @@ interface CardProps {
   fetchProjectData?: (id: number) => void;
   onNotify?: (message: string, success: boolean) => void; // Add this prop
   className?: string;
+  proj_valor_total: React.ReactNode | number;
+
 }
 
 type ReactElementWithProps = React.ReactElement & {
@@ -38,6 +40,7 @@ export default function Cards_Projects({
   endDate = "",
   progress = 0,
   users = [],
+  proj_valor_total = 0,
   onDelete,
   fetchProjectData,
   onNotify, // Add this to parameters
@@ -76,12 +79,42 @@ export default function Cards_Projects({
     
     return '';
   };
+
+  const extractProjectValorToal = (): number => {
+    if (typeof proj_valor_total === 'number') {
+      return proj_valor_total;
+    }
+    
+    if (React.isValidElement(proj_valor_total)) {
+      const element = proj_valor_total as ReactElementWithProps;
+      
+      const linkChildren = element.props.children;
+      
+      if (typeof linkChildren === 'number') {
+        return linkChildren;
+      }
+      
+      if (React.isValidElement(linkChildren)) {
+        const childElement = linkChildren as ReactElementWithProps;
+        return Number(childElement.props.children || 0);
+      }
+      
+      if (Array.isArray(linkChildren)) {
+        const textContent = linkChildren.find(child => typeof child === 'number');
+        return typeof textContent === 'number' ? textContent : 0;
+      }
+    }
+    
+    return 0;
+  };
+  
   
   const [projectData, setProjectData] = useState({
     projeto_proj_nome: extractProjectName(),
     description,
     startDate,
     endDate,
+    proj_valor_total: extractProjectValorToal()
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -107,20 +140,19 @@ export default function Cards_Projects({
 
   const handleSave = async () => {
     try {
-      const formattedStartDate = projectData.startDate 
-        ? new Date(projectData.startDate + 'T12:00:00').toISOString().split('T')[0]
-        : '';
-      
-      const formattedEndDate = projectData.endDate 
-        ? new Date(projectData.endDate + 'T12:00:00').toISOString().split('T')[0]
-        : '';
+ 
 
       const updateData = {
         proj_nome: projectData.projeto_proj_nome,
         proj_descricao: projectData.description,
-        proj_data_inicio: formattedStartDate,
-        proj_data_fim: formattedEndDate
+        proj_data_inicio: projectData.startDate,
+        proj_data_fim: projectData.endDate,
+        proj_valor_total: projectData.proj_valor_total
       };
+
+
+
+      console.log(updateData)
 
       await axios.put(
         `http://localhost:3000/projeto/update/${id}`, 
@@ -292,9 +324,21 @@ export default function Cards_Projects({
             </div>
           </div>
 
+          
+          <input
+            type="number"
+            name="proj_valor_total"
+            value={projectData.proj_valor_total}
+            onChange={handleChange}
+            className="w-full border p-2 rounded-md text-lg font-bold"
+          />
+
+
+
+
           <Button
             className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer mt-4"
-            onClick={handleSave}
+            onClick={() => handleSave()}
           >
             Salvar
           </Button>
