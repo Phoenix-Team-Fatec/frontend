@@ -37,6 +37,8 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
+  const [areaFilter, setAreaFilter] = useState("all");
+  const [areasAtuacao, setAreasAtuacao] = useState<any[]>([]);
   
 
 
@@ -53,6 +55,17 @@ export default function Dashboard() {
       setUserId(Number(userData.user_id))
     }
   }, [router]);
+
+    // Função para buscar as áreas de atuação
+    const fetchAreasAtuacao = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/area_atuacao');
+        setAreasAtuacao(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar áreas de atuação", error);
+        showNotification("Erro ao carregar áreas de atuação", false);
+      }
+    };
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -127,12 +140,17 @@ export default function Dashboard() {
       }
     }
 
+    if (areaFilter !== "all") {
+      result = result.filter(project => project.area_atuacao_id === parseInt(areaFilter));
+    }
+
     setFilteredProjects(result);
-  }, [projects, searchTerm, statusFilter]);
+  }, [projects, searchTerm, statusFilter, areaFilter]);
 
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
+    setAreaFilter("all");
   };
 
   useEffect(() => {
@@ -224,6 +242,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (initialized && authChecked) {
       fetchProjetos();
+      fetchAreasAtuacao(); // Carrega as áreas de atuação
     }
   }, [initialized, authChecked]);
 
@@ -296,7 +315,20 @@ export default function Dashboard() {
               </select>
             </div>
 
-            {(searchTerm || statusFilter !== "all") && (
+            <select
+                value={areaFilter}
+                onChange={(e) => setAreaFilter(e.target.value)}
+                className="h-9 p-1 px-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              >
+                <option value="all">Todas as Áreas</option>
+                {areasAtuacao.map((area) => (
+                  <option key={area.area_atuacao_id} value={area.area_atuacao_id}>
+                    {area.area_atuacao_nome}
+                  </option> 
+                ))}
+              </select>
+
+            {(searchTerm || statusFilter !== "all" || areaFilter !== "all") && (
               <Button
                 variant="ghost"
                 onClick={clearFilters}
