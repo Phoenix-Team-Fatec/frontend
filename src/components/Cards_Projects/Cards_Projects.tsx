@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Pencil, Trash, MoreVertical, AlertTriangle } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Pencil, Trash, MoreVertical, AlertTriangle, Folder, Badge, User } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "../ui/input";
 import Popup from "@/components/Feedback/popup";
@@ -46,6 +46,7 @@ export default function Cards_Projects({
   onNotify, // Add this to parameters
   className = "",
 }: CardProps) {
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
@@ -225,7 +226,12 @@ export default function Cards_Projects({
             className="cursor-pointer hover:text-red-500"
             onClick={() => setIsDeleteModalOpen(true)}
           />
-          <MoreVertical size={16} className="cursor-pointer" />
+          <MoreVertical 
+            size={16} 
+            className="cursor-pointer hover:text-gray-800"
+            onClick={() => setIsDetailsModalOpen(true)}
+          />
+
         </div>
 
         <CardContent className="p-0">
@@ -344,6 +350,90 @@ export default function Cards_Projects({
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Detalhes */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+  <DialogContent className="max-w-2xl rounded-lg">
+    <DialogHeader>
+      <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+        <Folder className="text-blue-600" size={20} />
+        Detalhes do Projeto
+      </DialogTitle>
+      <DialogDescription className="text-gray-500">
+        Informações completas sobre o projeto
+      </DialogDescription>
+    </DialogHeader>
+
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+      {/* Seção de Informações Básicas */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Nome do Projeto</h3>
+          <p className="mt-1 text-lg font-semibold text-gray-900">{projeto_proj_nome}</p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
+          <p className="mt-1 text-gray-700 whitespace-pre-line">
+            {description || 'Nenhuma descrição fornecida'}
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Progresso</h3>
+          <div className="mt-2 flex items-center gap-3">
+            <Progress value={progress} className="h-2 w-full" />
+            <span className="text-sm font-medium text-blue-600">{progress}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Seção de Metadados */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Data de Início</h3>
+            <p className="mt-1 text-gray-700">
+              {startDate ? formatDate(startDate) : 'Não definida'}
+            </p>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-500">Data de Término</h3>
+            <p className="mt-1 text-gray-700">
+              {endDate ? formatDate(endDate) : 'Não definida'}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Valor Total</h3>
+          <p className="mt-1 text-xl font-semibold text-green-600">
+            {proj_valor_total ? `R$ ${Number(proj_valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'Não informado'}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <DialogFooter className="border-t pt-4">
+      <Button 
+        variant="outline" 
+        onClick={() => setIsDetailsModalOpen(false)}
+        className="mr-2"
+      >
+        Fechar
+      </Button>
+      <Button 
+        onClick={() => {
+          setIsDetailsModalOpen(false);
+          setIsModalOpen(true);
+        }}
+      >
+        <Pencil className="mr-2 h-4 w-4" />
+        Editar Projeto
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
         <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-md w-full">
