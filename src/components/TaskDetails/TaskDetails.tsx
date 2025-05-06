@@ -14,7 +14,7 @@ interface Subtarefa {
   subtarefa_id?: number;
   subtarefa_nome: string;
   subtarefa_status: boolean;
-  tarefa_id:number
+  tarefa_id: number
 }
 
 
@@ -31,7 +31,8 @@ interface TaskDetailsProps {
   onSave: () => void;
   onCancel: () => void;
   onEdit: () => void;
-  dialogHeader?: React.ReactNode
+  dialogHeader?: React.ReactNode;
+  isCoordenador: Boolean;
 }
 
 interface Responsavel {
@@ -51,7 +52,8 @@ export default function TaskDetails({
   onRemoveResponsavel,
   onSave,
   onCancel,
-  onEdit
+  onEdit,
+  isCoordenador
 }: TaskDetailsProps) {
 
 
@@ -59,35 +61,35 @@ export default function TaskDetails({
   const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
   const [newSubtaskName, setNewSubtaskName] = useState("");
 
-  useEffect(() =>{
+  useEffect(() => {
     const fetchSubtasks = async () => {
-      try{
+      try {
 
         const tarefa_id = task.tarefa_id
 
-        const {data} =  await axios.get(`http://localhost:3000/subtarefa/${tarefa_id}`)
-        
-        const formated_subtarefas = data.map((subtarefa:any) => ({
-            subtarefa_id: subtarefa.subtarefa_id,
-            subtarefa_nome: subtarefa.subtarefa_nome,
-            subtarefa_status: subtarefa.subtarefa_status
+        const { data } = await axios.get(`http://localhost:3000/subtarefa/${tarefa_id}`)
+
+        const formated_subtarefas = data.map((subtarefa: any) => ({
+          subtarefa_id: subtarefa.subtarefa_id,
+          subtarefa_nome: subtarefa.subtarefa_nome,
+          subtarefa_status: subtarefa.subtarefa_status
         }));
 
         console.log(formated_subtarefas)
-        if (formated_subtarefas){
+        if (formated_subtarefas) {
           setSubtasks(formated_subtarefas)
-        }else{
+        } else {
           setSubtasks([])
         }
-          
 
-      }catch(error){
+
+      } catch (error) {
         console.log(`Erro ao carregar subtarefas ${error}`)
       }
     }
     fetchSubtasks();
-  },[])
-  
+  }, [])
+
 
   const [filteredSuggestions, setFilteredSuggestions] =
     useState<TaskDetailsProps["availableUsers"]>([]);
@@ -132,7 +134,7 @@ export default function TaskDetails({
   const addSubtask = async () => {
     if (!newSubtaskName.trim()) return;
 
-    try{  
+    try {
       const newSubtask = {
         nome: newSubtaskName,
         // descricao: "descricao",
@@ -142,52 +144,52 @@ export default function TaskDetails({
         tarefa_id: task.tarefa_id
       };
 
-  
+
       console.log(newSubtask)
 
       const response = await axios.post("http://localhost:3000/subtarefa", newSubtask)
       const subTarefaId = response.data.subtarefa_id
 
-      const {data} = await axios.get(`http://localhost:3000/tarefa/${task.tarefa_id}`)
+      const { data } = await axios.get(`http://localhost:3000/tarefa/${task.tarefa_id}`)
 
-      
+
 
       const ids_users = data[0]?.usuarios?.map((user: any) => user.user_id);
 
 
       console.log(ids_users)
 
-      for(let id of ids_users){
+      for (let id of ids_users) {
         const relSubTarefaData = {
           user_id: id,
-          subtarefa_id: subTarefaId 
+          subtarefa_id: subTarefaId
         }
 
         await axios.post("http://localhost:3000/subtarefa_usuario/associate", relSubTarefaData)
       }
-  
+
       setSubtasks(prev => [...prev, response.data]);
       setNewSubtaskName("");
-    }catch(error){
+    } catch (error) {
       console.log(`Erro ao criar tarefa: ${error}`)
     }
   };
 
   const removeSubtask = async (subtarefa_id: number) => {
 
-    try{
+    try {
 
-        const response = await axios.delete(`http://localhost:3000/subtarefa/${subtarefa_id}`)
+      const response = await axios.delete(`http://localhost:3000/subtarefa/${subtarefa_id}`)
 
-        setSubtasks(prev => prev.filter(subtarefa => subtarefa.subtarefa_id != subtarefa_id))
-    }catch(error){
+      setSubtasks(prev => prev.filter(subtarefa => subtarefa.subtarefa_id != subtarefa_id))
+    } catch (error) {
       console.log(`Erro ao excluir subtarefa`)
     }
-    
+
   };
 
   const toggleSubtask = async (subtarefa_id: number) => {
-    try{
+    try {
 
       const subtarefa_data = {
         subtarefa_id: subtarefa_id,
@@ -196,7 +198,7 @@ export default function TaskDetails({
 
       console.log(subtarefa_data)
 
-      const response = await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data )
+      const response = await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data)
 
 
       const updatedSubtasks = subtasks.map(sub =>
@@ -204,15 +206,15 @@ export default function TaskDetails({
           ? { ...sub, subtarefa_status: !sub.subtarefa_status }
           : sub
       );
-  
+
       setSubtasks(updatedSubtasks);
-      
-     
-     
-    }catch(error){
+
+
+
+    } catch (error) {
       console.log(`Erro ao atualizar status de subtarefa: ${error}`)
     }
- 
+
   };
 
   const toggleSubtaskFalse = async (subtarefa_id: number) => {
@@ -221,24 +223,24 @@ export default function TaskDetails({
         subtarefa_id,
         subtarefa_status: false,
       };
-  
+
       await axios.put(`http://localhost:3000/subtarefa`, subtarefa_data);
-  
+
       const updatedSubtasks = subtasks.map(sub =>
         sub.subtarefa_id === subtarefa_id
           ? { ...sub, subtarefa_status: false }
           : sub
       );
-  
+
       setSubtasks(updatedSubtasks);
     } catch (error) {
       console.log(`Erro ao atualizar status de subtarefa para false: ${error}`);
     }
   };
-  
 
 
-  const handleSubtaskChange = (index:any, value:any) => {
+
+  const handleSubtaskChange = (index: any, value: any) => {
     const updated = [...subtasks];
     updated[index].subtarefa_nome = value;
     setSubtasks(updated);
@@ -269,7 +271,7 @@ export default function TaskDetails({
             </h2>
           )}
           <div className="flex gap-2">
-            {!isEditing && (
+            {!isEditing && isCoordenador && (
               <Button
                 variant="outline"
                 size="sm"
@@ -391,17 +393,17 @@ export default function TaskDetails({
                   <div className="flex gap-2 w-full">
                     <Input
                       value={subtask.subtarefa_nome}
-                      onChange={(e) => {handleSubtaskChange(subtask.subtarefa_id, e.target.value)}}
+                      onChange={(e) => { handleSubtaskChange(subtask.subtarefa_id, e.target.value) }}
                       className="flex-1"
                     />
-                        <Button
-                        variant="outline"
-                        size="icon"
-                        title="Desmarcar como feita"
-                        onClick={() => toggleSubtaskFalse(Number(subtask.subtarefa_id))}
-                      >
-                        <Undo2 size={16} /> {/* Ícone de "desfazer" do Lucide */}
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      title="Desmarcar como feita"
+                      onClick={() => toggleSubtaskFalse(Number(subtask.subtarefa_id))}
+                    >
+                      <Undo2 size={16} /> {/* Ícone de "desfazer" do Lucide */}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -548,13 +550,15 @@ export default function TaskDetails({
           </Button>
         </div>
       ) : (
-        <Button
-          variant="outline"
-          onClick={onEdit}
-          className="w-full mt-4"
-        >
-          Editar Tarefa
-        </Button>
+        isCoordenador && (
+          <Button
+            variant="outline"
+            onClick={onEdit}
+            className="w-full mt-4"
+          >
+            Editar Tarefa
+          </Button>
+        )
       )}
     </div>
   );

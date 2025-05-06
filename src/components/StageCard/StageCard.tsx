@@ -118,6 +118,7 @@ export default function StageCard({
             onEdit={() => onEditTask(task)}
             onDelete={() => onDeleteTask(task.tarefa_id)}
             onClick={() => onOpenTaskDetails(task)}
+            isCoordenador={isCoordenador}
           />
         ))}
       </div>

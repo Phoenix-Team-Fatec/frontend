@@ -106,6 +106,7 @@ const ProjectTasks = () => {
         const project = await axios.get(`http://localhost:3000/projeto/getById/${Number(proj_id)}`);
         response.data.forEach((user) => {
           if (user.user_id === userIdLogged) {
+            console.log(user)
             if (user.coordenador) {
               setIsCoordenador(true)
             }
@@ -614,6 +615,7 @@ const ProjectTasks = () => {
                   setEditableTask(selectedTask ? { ...selectedTask } : null);
                 }}
                 onEdit={() => setIsEditing(true)}
+                isCoordenador={isCoordenador}
               />
             )}
           </DialogContent>
