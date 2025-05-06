@@ -15,9 +15,13 @@ interface TaskFormProps {
   onChange: (field: string, value: string | boolean) => void;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  minDate: Date,
+  maxDate: Date,
 }
 
-export default function TaskForm({ task, onChange, onSubmit, isSubmitting }: TaskFormProps) {
+export default function TaskForm({ task, onChange, onSubmit, isSubmitting, minDate, maxDate, }: TaskFormProps) {
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
   return (
     <div className="space-y-4">
       <Input
@@ -27,14 +31,14 @@ export default function TaskForm({ task, onChange, onSubmit, isSubmitting }: Tas
         required
         className="w-full p-2 border rounded"
       />
-      
+
       <Textarea
         placeholder="Descrição"
         value={task.descricao}
         onChange={(e) => onChange("descricao", e.target.value)}
         className="w-full p-2 border rounded"
       />
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</Label>
@@ -43,9 +47,11 @@ export default function TaskForm({ task, onChange, onSubmit, isSubmitting }: Tas
             value={task.data_inicio.split('T')[0]}
             onChange={(e) => onChange("data_inicio", e.target.value)}
             className="w-full p-2 border rounded"
+            min={fmt(minDate)}
+            max={fmt(maxDate)}
           />
         </div>
-        
+
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-1">Data de Término</Label>
           <Input
@@ -53,10 +59,12 @@ export default function TaskForm({ task, onChange, onSubmit, isSubmitting }: Tas
             value={task.data_fim.split('T')[0]}
             onChange={(e) => onChange("data_fim", e.target.value)}
             className="w-full p-2 border rounded"
+            min={fmt(minDate)}
+            max={fmt(maxDate)}
           />
         </div>
       </div>
-      
+
       <div className="flex items-center space-x-2">
         <Checkbox
           id="task-status"
@@ -71,8 +79,8 @@ export default function TaskForm({ task, onChange, onSubmit, isSubmitting }: Tas
           Tarefa concluída
         </Label>
       </div>
-      
-      <Button 
+
+      <Button
         onClick={onSubmit}
         disabled={!task.nome.trim() || isSubmitting}
         className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded"

@@ -12,9 +12,13 @@ interface StageFormProps {
   onChange: (field: string, value: string | boolean) => void;
   onSubmit: () => void;
   isSubmitting?: boolean;
+  minDate: Date,
+  maxDate: Date,
 }
 
-export default function StageForm({ stage, onChange, onSubmit, isSubmitting }: StageFormProps) {
+export default function StageForm({ stage, onChange, onSubmit, isSubmitting, minDate, maxDate }: StageFormProps) {
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
   return (
     <div className="space-y-4">
       <Input
@@ -40,6 +44,8 @@ export default function StageForm({ stage, onChange, onSubmit, isSubmitting }: S
             value={stage.dataInicio}
             onChange={(e) => onChange("dataInicio", e.target.value)}
             className="w-full p-2 border rounded"
+            min={fmt(minDate)}
+            max={fmt(maxDate)}
           />
         </div>
         
@@ -50,6 +56,8 @@ export default function StageForm({ stage, onChange, onSubmit, isSubmitting }: S
             value={stage.dataFim}
             onChange={(e) => onChange("dataFim", e.target.value)}
             className="w-full p-2 border rounded"
+            min={fmt(minDate)}
+            max={fmt(maxDate)}
           />
         </div>
       </div>

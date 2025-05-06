@@ -13,6 +13,7 @@ import StageCard from "@/components/StageCard/StageCard";
 import StageForm from "@/components/StageForm/StageForm";
 import TaskForm from "@/components/TaskForm/TaskForm";
 import TaskDetails from "@/components/TaskDetails/TaskDetails";
+import { useUser } from "@/hook/UserData";
 
 interface Tarefa {
   tarefa_id: number;
@@ -39,7 +40,9 @@ interface Etapa {
 
 const ProjectTasks = () => {
   const searchParams = useSearchParams();
+  const userDataHook = useUser();
   const proj_id = searchParams.get('projectId');
+  const userIdLogged = userDataHook?.user_id;
   const [stages, setStages] = useState<Etapa[]>([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -64,6 +67,8 @@ const ProjectTasks = () => {
 
   const [newStage, setNewStage] = useState(initialStageState);
   const [selectedStage, setSelectedStage] = useState<number | null>(null);
+  const [taskMinDate, setTaskMinDate] = useState<Date>(new Date());
+  const [taskMaxDate, setTaskMaxDate] = useState<Date>(new Date());
   const [newTask, setNewTask] = useState(initialTaskState);
   const [isStageDialogOpen, setIsStageDialogOpen] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
@@ -79,8 +84,11 @@ const ProjectTasks = () => {
   const [availableUsers, setAvailableUsers] = useState<
     { user_id: number; user_nome: string; user_email: string; user_foto: string; }[]
   >([]);
+  const [projectMinDate, setProjectMinDate] = useState<Date>(new Date())
+  const [projectMaxDate, setProjectMaxDate] = useState<Date>(new Date())
   const [newResponsavel, setNewResponsavel] = useState("");
   const [projectName, setProjectName] = useState("");
+  const [isCoordenador, setIsCoordenador] = useState(false);
 
   useEffect(() => {
     const userData = getUserData();
@@ -96,14 +104,23 @@ const ProjectTasks = () => {
       try {
         const response = await axios.get(`http://localhost:3000/relUserProj/getUsers/${Number(proj_id)}`);
         const project = await axios.get(`http://localhost:3000/projeto/getById/${Number(proj_id)}`);
+        response.data.forEach((user) => {
+          if (user.user_id === userIdLogged) {
+            if (user.coordenador) {
+              setIsCoordenador(true)
+            }
+          }
+        })
         setAvailableUsers(response.data);
+        setProjectMinDate(new Date(project.data.proj_data_inicio!));
+        setProjectMaxDate(new Date(project.data.proj_data_fim!));
         setProjectName(project.data.proj_nome);
       } catch (error) {
         console.error("Error trying to get users in the project", error);
       }
     }
     fetchData();
-  }, [proj_id]);
+  }, [proj_id, userIdLogged]);
 
   const handleResponsibleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -423,15 +440,17 @@ const ProjectTasks = () => {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       <div className={`w-full p-8 ${contentMargin}`}>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Etapas do projeto {projectName}</h2>
-        <Button 
-          onClick={() => setIsStageDialogOpen(true)} 
-          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-10 px-4 rounded-lg shadow-md"
-        >
-          + Criar Nova Etapa
-        </Button>
-      </div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">Etapas do projeto {projectName}</h2>
+          {isCoordenador && (
+            <Button
+              onClick={() => setIsStageDialogOpen(true)}
+              className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-10 px-4 rounded-lg shadow-md"
+            >
+              + Criar Nova Etapa
+            </Button>
+          )}
+        </div>
         <div className="pr-8">
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
@@ -449,7 +468,11 @@ const ProjectTasks = () => {
                     <div key={stage.etapa_id} className="w-[300px] inline-block">
                       <StageCard
                         stage={stage}
-                        onAddTask={() => setSelectedStage(stage.etapa_id)}
+                        onAddTask={(id, min, max) => {
+                          setSelectedStage(id);
+                          setTaskMinDate(min);
+                          setTaskMaxDate(max);
+                        }}
                         onEditTask={(task) => {
                           openTaskDetails(task, stage.etapa_id);
                           setIsEditing(true);
@@ -462,6 +485,9 @@ const ProjectTasks = () => {
                         onOpenTaskDetails={openTaskDetails}
                         onDeleteStage={deleteStage}
                         onEditStage={editStage}
+                        minDate={new Date(stage.etapa_data_inicio!)}
+                        maxDate={new Date(stage.etapa_data_fim!)}
+                        isCoordenador={isCoordenador}
                       />
                     </div>
                   ))}
@@ -470,25 +496,35 @@ const ProjectTasks = () => {
               </ScrollArea>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {stages.map((stage) => (
-                  <StageCard
-                    key={stage.etapa_id}
-                    stage={stage}
-                    onAddTask={() => setSelectedStage(stage.etapa_id)}
-                    onEditTask={(task) => {
-                      openTaskDetails(task, stage.etapa_id);
-                      setIsEditing(true);
-                    }}
-                    onDeleteTask={(taskId) => {
-                      if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
-                        deleteTask(taskId);
-                      }
-                    }}
-                    onOpenTaskDetails={openTaskDetails}
-                    onDeleteStage={deleteStage}
-                    onEditStage={editStage}
-                  />
-                ))}
+                {stages.map((stage) => {
+
+                  return (
+                    <StageCard
+                      key={stage.etapa_id}
+                      stage={stage}
+                      onAddTask={(id, min, max) => {
+                        setSelectedStage(id);
+                        setTaskMinDate(min);
+                        setTaskMaxDate(max);
+                      }}
+                      onEditTask={(task) => {
+                        openTaskDetails(task, stage.etapa_id);
+                        setIsEditing(true);
+                      }}
+                      onDeleteTask={(taskId) => {
+                        if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+                          deleteTask(taskId);
+                        }
+                      }}
+                      onOpenTaskDetails={openTaskDetails}
+                      onDeleteStage={deleteStage}
+                      onEditStage={editStage}
+                      minDate={new Date(stage.etapa_data_inicio!)}
+                      maxDate={new Date(stage.etapa_data_fim!)}
+                      isCoordenador={isCoordenador}
+                    />
+                  )
+                })}
                 <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
                   <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
                     <DialogHeader>
@@ -499,6 +535,8 @@ const ProjectTasks = () => {
                       onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
                       onSubmit={createStage}
                       isSubmitting={loading}
+                      minDate={projectMinDate}
+                      maxDate={projectMaxDate}
                     />
                   </DialogContent>
                 </Dialog>
@@ -510,12 +548,14 @@ const ProjectTasks = () => {
             <p className="text-gray-500 text-lg font-light mb-6">Nenhuma etapa criada ainda...</p>
             <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
               <DialogTrigger asChild>
-                <Button
-                  onClick={() => setIsStageDialogOpen(true)}
-                  className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md"
-                >
-                  + Criar Nova Etapa
-                </Button>
+                {isCoordenador && (
+                  <Button
+                    onClick={() => setIsStageDialogOpen(true)}
+                    className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md"
+                  >
+                    + Criar Nova Etapa
+                  </Button>
+                )}
               </DialogTrigger>
               <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
                 <DialogHeader>
@@ -526,6 +566,8 @@ const ProjectTasks = () => {
                   onChange={(field, value) => setNewStage({ ...newStage, [field]: value })}
                   onSubmit={createStage}
                   isSubmitting={loading}
+                  minDate={projectMinDate}
+                  maxDate={projectMaxDate}
                 />
               </DialogContent>
             </Dialog>
@@ -543,6 +585,8 @@ const ProjectTasks = () => {
                 onChange={(field, value) => setNewTask({ ...newTask, [field]: value })}
                 onSubmit={() => addTask(selectedStage)}
                 isSubmitting={loading}
+                minDate={taskMinDate}
+                maxDate={taskMaxDate}
               />
             </DialogContent>
           </Dialog>

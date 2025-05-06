@@ -22,7 +22,10 @@ interface StageCardProps {
       tarefa_status: boolean;
     }>;
   };
-  onAddTask: (stageId: number) => void;
+  minDate: Date,
+  maxDate: Date,
+  isCoordenador: Boolean,
+  onAddTask: (stageId: number, minDate: Date, maxDate: Date) => void;
   onEditTask: (task: any) => void;
   onDeleteTask: (taskId: number) => void;
   onOpenTaskDetails: (task: any) => void;
@@ -38,6 +41,9 @@ export default function StageCard({
   onOpenTaskDetails,
   onDeleteStage,
   onEditStage,
+  minDate,
+  maxDate,
+  isCoordenador
 }: StageCardProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const totalTarefas = stage.tarefas?.length || 0;
@@ -49,22 +55,26 @@ export default function StageCard({
       <div className="flex justify-between items-start mb-3">
         <h3 className="text-xl font-semibold text-[#355EAF]">{stage.etapa_nome}</h3>
         <div className="flex gap-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setIsEditModalOpen(true)}
-            className="text-gray-500 hover:text-[#355EAF] hover:bg-[#355EAF]/10"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onDeleteStage(stage.etapa_id)}
-            className="text-gray-500 hover:text-red-500 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          {isCoordenador && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsEditModalOpen(true)}
+              className="text-gray-500 hover:text-[#355EAF] hover:bg-[#355EAF]/10"
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          )}
+          {isCoordenador && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDeleteStage(stage.etapa_id)}
+              className="text-gray-500 hover:text-red-500 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -80,13 +90,18 @@ export default function StageCard({
       {stage.etapa_descricao && (
         <p className="text-gray-600 text-sm mb-4">{stage.etapa_descricao}</p>
       )}
-      
-      <Button 
-        onClick={() => onAddTask(stage.etapa_id)} 
-        className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4"
-      >
-        + Adicionar Tarefa
-      </Button>
+      {isCoordenador && (
+        <Button
+          onClick={() => onAddTask(
+            stage.etapa_id,
+            minDate,
+            maxDate
+          )}
+          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4"
+        >
+          + Adicionar Tarefa
+        </Button>
+      )}
 
       {stage.tarefas && stage.tarefas.length > 0 && (
         <div className="mb-4">
