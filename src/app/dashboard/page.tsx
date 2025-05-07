@@ -412,6 +412,10 @@ export default function Dashboard() {
                     onNotify={showNotification}
                     className="hover:shadow-lg transition-shadow duration-300"
                     proj_valor_total={project.projeto_proj_valor_total}
+                    proj_inst_financiadoras={project.projeto_proj_inst_financiadoras}
+                    proj_inst_parceiras={project.projeto_proj_inst_parceiras}
+                    proj_area_atuacao_id={project.area_atuacao_id}
+
                   />
                 </div>
               ))}

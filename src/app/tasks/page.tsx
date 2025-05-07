@@ -211,9 +211,10 @@ const ProjectTasks = () => {
     try {
       setLoading(true);
       const response = await axios.put(`http://localhost:3000/etapas`, {
-        etapa_id: stageId,
-        etapa_nome: newName,
-        etapa_descricao: newDescription
+        etapaId: stageId,
+        etapaNome: newName,
+        etapaDescricao: newDescription,
+    
       });
 
       setStages(prevStages =>
