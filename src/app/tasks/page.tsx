@@ -207,20 +207,24 @@ const ProjectTasks = () => {
     }
   };
 
-  const editStage = async (stageId: number, newName: string, newDescription: string) => {
+  const editStage = async (stageId: number, newName: string, newDescription: string, dataInicio:string, dataFim:string) => {
     try {
       setLoading(true);
+      console.log(dataInicio)
+      console.log(dataFim)
       const response = await axios.put(`http://localhost:3000/etapas`, {
         etapaId: stageId,
         etapaNome: newName,
         etapaDescricao: newDescription,
+        etapaDataInicio: new Date(dataInicio),
+        etapaDataFim: new Date(dataFim) 
     
       });
 
       setStages(prevStages =>
         prevStages.map(stage =>
           stage.etapa_id === stageId
-            ? { ...stage, etapa_nome: newName, etapa_descricao: newDescription }
+            ? { ...stage, etapa_nome: newName, etapa_descricao: newDescription, etapa_data_inicio: dataInicio, etapa_data_fim:dataFim }
             : stage
         )
       );

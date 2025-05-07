@@ -67,8 +67,11 @@ export default function Cards_Projects({
   const [areasList, setAreasList] = useState<Area_atuacao[]>([]);
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
   const [storedAreas, setStoredAreas] = useState<Area_atuacao[]>([]);
-  const [area, setArea] = useState("");
 
+
+ 
+
+  
   
   const extractProjectName = (): string => {
     if (typeof projeto_proj_nome === 'string') {
@@ -146,35 +149,7 @@ export default function Cards_Projects({
     fetchAreaAtuacao()
   },[])
 
-  const addAreaAtuacao = async () => {
-    try {
-      const data = { area_atuacao_nome: area };
-      const response = await axios.post('http://localhost:3000/area_atuacao', data);
-      
-      // Atualiza as áreas disponíveis e da sessão
-      setStoredAreas(prev => [...prev, response.data]);
-      setAreasList(prev => [...prev, response.data]);
-      setArea(""); // Limpa o input
-    } catch (error) {
-      console.error("Erro ao criar área:", error);
-      alert("Erro ao adicionar área. Verifique o console.");
-    }
-  };
   
-      const removeArea = async(areaId: number) => {
-        try{
-          
-          // Remova a barra duplicada
-          const response = await axios.delete(`http://localhost:3000/area_atuacao/${areaId}`);        
-          
-           // Atualiza as áreas disponíveis e da sessão
-           setStoredAreas(prev => prev.filter(area => area.area_atuacao_id !== areaId));
-           setAreasList(prev => prev.filter(area => area.area_atuacao_id !== areaId));
-  
-        }catch(error){
-          console.log(`Erro ao deletar área: ${error}`)
-        }
-      };
   
       const toggleAreaSelection = (area: number) => {
         setSelectedArea(area)
@@ -193,7 +168,8 @@ export default function Cards_Projects({
     proj_inst_financiadoras,
     proj_area_atuacao_id
   });
-  
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProjectData({ ...projectData, [e.target.name]: e.target.value });
   };
@@ -246,6 +222,8 @@ export default function Cards_Projects({
       if (typeof fetchProjectData === 'function') {
         fetchProjectData(id);
       }
+
+
     } catch (error) {
       console.error("Erro ao atualizar projeto:", error);
 
@@ -258,6 +236,7 @@ export default function Cards_Projects({
       showNotification(errorMessage, false);
     }
   };
+
 
   const handleDelete = () => {
     onDelete(id);
@@ -512,9 +491,7 @@ export default function Cards_Projects({
                   </div>
                 ))}
               </div>
-              
-              
-            </div>
+           </div>
 
          
           <Button
