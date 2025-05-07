@@ -18,8 +18,10 @@ interface EditStageModalProps {
     etapa_id: number;
     etapa_nome: string;
     etapa_descricao?: string;
+    etapa_data_inicio: string;
+    etapa_data_fim: string;
   };
-  onSave: (stageId: number, newName: string, newDescription: string) => void;
+  onSave: (stageId: number, newName: string, newDescription: string, dataInicio:string, dataFim:string) => void;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -32,16 +34,25 @@ export function EditStageModal({
 }: EditStageModalProps) {
   const [name, setName] = React.useState(stage.etapa_nome);
   const [description, setDescription] = React.useState(stage.etapa_descricao || "");
+  const [startDate, setStartDate] = React.useState(
+    stage.etapa_data_inicio ? new Date(stage.etapa_data_inicio).toISOString().split('T')[0] : ""
+  );
+  const [endDate, setEndDate] = React.useState(
+    stage.etapa_data_fim ? new Date(stage.etapa_data_fim).toISOString().split('T')[0] : ""
+  );
+
 
   // Atualiza os estados quando o stage prop muda
   useEffect(() => {
     setName(stage.etapa_nome);
     setDescription(stage.etapa_descricao || "");
-  }, [stage, isOpen]); // Adicionamos isOpen como dependência
+    setStartDate(stage.etapa_data_inicio ? new Date(stage.etapa_data_inicio).toISOString().split('T')[0] : "");
+    setEndDate(stage.etapa_data_fim ? new Date(stage.etapa_data_fim).toISOString().split('T')[0] : "");
+  }, [stage.etapa_id]); // Adicionamos isOpen como dependência
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(stage.etapa_id, name, description);
+    onSave(stage.etapa_id, name, description, startDate, endDate);
     onOpenChange(false);
   };
 
@@ -69,6 +80,30 @@ export function EditStageModal({
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          <div className="flex justify-between text-sm text-gray-500">
+              <div>
+                <label>Início:</label>
+                &nbsp;
+                <input
+                  type="date"
+                  name="startDate"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="border p-1 rounded-md"
+                />
+              </div>
+              <div>
+                <label>Fim:</label>
+                &nbsp;
+                <input
+                  type="date"
+                  name="endDate"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="border p-1 rounded-md"
+                />
+              </div>
+            </div>
           <div className="flex justify-end gap-2">
             <Button 
               type="button" 

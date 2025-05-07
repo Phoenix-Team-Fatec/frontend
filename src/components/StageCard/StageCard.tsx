@@ -30,7 +30,7 @@ interface StageCardProps {
   onDeleteTask: (taskId: number) => void;
   onOpenTaskDetails: (task: any) => void;
   onDeleteStage: (stageId: number) => void;
-  onEditStage: (stageId: number, newName: string, newDescription: string) => void;
+  onEditStage: (stageId: number, newName: string, newDescription: string, dataInicio:string, dataFim:string) => void;
 }
 
 export default function StageCard({

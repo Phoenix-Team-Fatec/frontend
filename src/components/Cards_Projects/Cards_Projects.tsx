@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -6,6 +6,8 @@ import { Pencil, Trash, MoreVertical, AlertTriangle, Folder, Badge, User } from 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Trash2, Check } from "lucide-react";
 import Popup from "@/components/Feedback/popup";
 import axios from "axios";
 
@@ -22,7 +24,9 @@ interface CardProps {
   onNotify?: (message: string, success: boolean) => void; // Add this prop
   className?: string;
   proj_valor_total: React.ReactNode | number;
-
+  proj_inst_parceiras: string[];
+  proj_inst_financiadoras: string[];
+  proj_area_atuacao_id:number
 }
 
 type ReactElementWithProps = React.ReactElement & {
@@ -31,6 +35,11 @@ type ReactElementWithProps = React.ReactElement & {
     [key: string]: any;
   };
 };
+
+interface Area_atuacao{
+  area_atuacao_id: number,
+  area_atuacao_nome:string
+}
 
 export default function Cards_Projects({
   id,
@@ -41,6 +50,9 @@ export default function Cards_Projects({
   progress = 0,
   users = [],
   proj_valor_total = 0,
+  proj_inst_financiadoras = [],
+  proj_inst_parceiras = [],
+  proj_area_atuacao_id = 0,
   onDelete,
   fetchProjectData,
   onNotify, // Add this to parameters
@@ -52,6 +64,14 @@ export default function Cards_Projects({
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(true);
+  const [areasList, setAreasList] = useState<Area_atuacao[]>([]);
+  const [selectedArea, setSelectedArea] = useState<number | null>(null);
+  const [storedAreas, setStoredAreas] = useState<Area_atuacao[]>([]);
+
+
+ 
+
+  
   
   const extractProjectName = (): string => {
     if (typeof projeto_proj_nome === 'string') {
@@ -109,15 +129,47 @@ export default function Cards_Projects({
     return 0;
   };
   
+  useEffect(() => {
+    const fetchAreaAtuacao = async () => {
+      try{
+
+
+        const {data} = await axios.get("http://localhost:3000/area_atuacao")
+
+        
+        
+        setAreasList(data)
+        setStoredAreas(data)
+      
+      }catch(error){
+        console.log(error)
+      }
+    }
+
+    fetchAreaAtuacao()
+  },[])
+
+  
+  
+      const toggleAreaSelection = (area: number) => {
+        setSelectedArea(area)
+      };
+  
+  
+
   
   const [projectData, setProjectData] = useState({
     projeto_proj_nome: extractProjectName(),
     description,
     startDate,
     endDate,
-    proj_valor_total: extractProjectValorToal()
+    proj_valor_total: extractProjectValorToal(),
+    proj_inst_parceiras,
+    proj_inst_financiadoras,
+    proj_area_atuacao_id
   });
-  
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProjectData({ ...projectData, [e.target.name]: e.target.value });
   };
@@ -148,7 +200,10 @@ export default function Cards_Projects({
         proj_descricao: projectData.description,
         proj_data_inicio: projectData.startDate,
         proj_data_fim: projectData.endDate,
-        proj_valor_total: projectData.proj_valor_total
+        proj_valor_total: projectData.proj_valor_total,
+        proj_inst_parceiras: projectData.proj_inst_parceiras,
+        proj_inst_financiadoras: projectData.proj_inst_financiadoras,
+        area_atuacao_id: selectedArea 
       };
 
 
@@ -167,6 +222,8 @@ export default function Cards_Projects({
       if (typeof fetchProjectData === 'function') {
         fetchProjectData(id);
       }
+
+
     } catch (error) {
       console.error("Erro ao atualizar projeto:", error);
 
@@ -179,6 +236,7 @@ export default function Cards_Projects({
       showNotification(errorMessage, false);
     }
   };
+
 
   const handleDelete = () => {
     onDelete(id);
@@ -201,6 +259,23 @@ export default function Cards_Projects({
       return 'Data inválida';
     }
   };
+
+  const handleArrayChange = (e: React.ChangeEvent<HTMLInputElement>, index: number, field: 'proj_inst_parceiras' | 'proj_inst_financiadoras') => {
+    const updatedArray = [...projectData[field]];
+    updatedArray[index] = e.target.value;
+    setProjectData({ ...projectData, [field]: updatedArray });
+  };
+  
+  const addArrayField = (field: 'proj_inst_parceiras' | 'proj_inst_financiadoras') => {
+    setProjectData({ ...projectData, [field]: [...projectData[field], ''] });
+  };
+  
+  const removeArrayField = (index: number, field: 'proj_inst_parceiras' | 'proj_inst_financiadoras') => {
+    const updatedArray = [...projectData[field]];
+    updatedArray.splice(index, 1);
+    setProjectData({ ...projectData, [field]: updatedArray });
+  };
+  
 
   return (
     <>
@@ -330,6 +405,63 @@ export default function Cards_Projects({
             </div>
           </div>
 
+          <div className="mt-4">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Parceiras:</label>
+  {projectData.proj_inst_parceiras.map((parceira, index) => (
+    <div key={index} className="flex items-center gap-2 mb-2">
+      <input
+        type="text"
+        value={parceira}
+        onChange={(e) => handleArrayChange(e, index, 'proj_inst_parceiras')}
+        className="flex-1 border p-2 rounded-md"
+      />
+      <Button
+        type="button"
+        onClick={() => removeArrayField(index, 'proj_inst_parceiras')}
+        className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
+      >
+        Remover
+      </Button>
+    </div>
+  ))}
+  <Button
+    type="button"
+    onClick={() => addArrayField('proj_inst_parceiras')}
+    className="text-sm bg-gray-200 px-2 py-1 rounded"
+  >
+    + Adicionar parceira
+  </Button>
+</div>
+
+<div className="mt-4">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Financiadoras:</label>
+  {projectData.proj_inst_financiadoras.map((financiadora, index) => (
+    <div key={index} className="flex items-center gap-2 mb-2">
+      <input
+        type="text"
+        value={financiadora}
+        onChange={(e) => handleArrayChange(e, index, 'proj_inst_financiadoras')}
+        className="flex-1 border p-2 rounded-md"
+      />
+      <Button
+        type="button"
+        onClick={() => removeArrayField(index, 'proj_inst_financiadoras')}
+        className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
+      >
+        Remover
+      </Button>
+    </div>
+  ))}
+  <Button
+    type="button"
+    onClick={() => addArrayField('proj_inst_financiadoras')}
+    className="text-sm bg-gray-200 px-2 py-1 rounded"
+  >
+    + Adicionar financiadora
+  </Button>
+</div>
+
+
           
           <input
             type="number"
@@ -340,8 +472,28 @@ export default function Cards_Projects({
           />
 
 
+       
+            <div className="space-y-2">
+              <Label>Áreas disponíveis</Label>
+              <div className="flex flex-wrap gap-2">
+                {storedAreas.map((area) => (
+                  <div
+                    key={`stored-${area.area_atuacao_id}`}
+                    onClick={() => toggleAreaSelection(area.area_atuacao_id)}
+                    className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
+                      (selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id
+                        ? 'bg-green-100 border-green-500 text-green-800'
+                        : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
+                    }`}
+                  >
+                    {(selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id && <Check size={14} className="text-green-600" />}
+                    <span>{area.area_atuacao_nome}</span>
+                  </div>
+                ))}
+              </div>
+           </div>
 
-
+         
           <Button
             className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer mt-4"
             onClick={() => handleSave()}
