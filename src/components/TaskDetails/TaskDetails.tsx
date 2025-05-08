@@ -59,7 +59,9 @@ export default function TaskDetails({
 
   const [responsibleInput, setResponsibleInput] = useState("");
   const [subtasks, setSubtasks] = useState<Subtarefa[]>([]);
+  const [subtasksUpdate, setSubtasksUpdate] = useState<Subtarefa[]>([]);
   const [newSubtaskName, setNewSubtaskName] = useState("");
+
 
   useEffect(() => {
     const fetchSubtasks = async () => {
@@ -75,9 +77,11 @@ export default function TaskDetails({
           subtarefa_status: subtarefa.subtarefa_status
         }));
 
+
         console.log(formated_subtarefas)
         if (formated_subtarefas) {
           setSubtasks(formated_subtarefas)
+          setSubtasksUpdate(formated_subtarefas)
         } else {
           setSubtasks([])
         }
@@ -137,9 +141,6 @@ export default function TaskDetails({
     try {
       const newSubtask = {
         nome: newSubtaskName,
-        // descricao: "descricao",
-        // data_inicio: "1999-01-01",
-        // data_fim: "1999-01-01",
         subtarefa_status: false,
         tarefa_id: task.tarefa_id
       };
@@ -159,7 +160,7 @@ export default function TaskDetails({
 
       console.log(ids_users)
 
-      for (let id of ids_users) {
+      for(let id of ids_users) {
         const relSubTarefaData = {
           user_id: id,
           subtarefa_id: subTarefaId
@@ -169,6 +170,7 @@ export default function TaskDetails({
       }
 
       setSubtasks(prev => [...prev, response.data]);
+      setSubtasksUpdate(prev => [...prev, response.data]);
       setNewSubtaskName("");
     } catch (error) {
       console.log(`Erro ao criar tarefa: ${error}`)
@@ -240,11 +242,46 @@ export default function TaskDetails({
 
 
 
-  const handleSubtaskChange = (index: any, value: any) => {
-    const updated = [...subtasks];
-    updated[index].subtarefa_nome = value;
-    setSubtasks(updated);
-  }
+  const handleSubtaskChange = (id:number, newValue:string) => {
+    
+    setSubtasks(prevSubtasks => 
+      prevSubtasks.map(subtask => 
+        subtask.subtarefa_id === id 
+          ? { ...subtask, subtarefa_nome: newValue } 
+          : subtask
+      )
+    );
+    setSubtasksUpdate(prevSubtasks => 
+      prevSubtasks.map(subtask => 
+        subtask.subtarefa_id === id 
+          ? { ...subtask, subtarefa_nome: newValue } 
+          : subtask
+      )
+    );
+  };
+
+
+  const handleUpdateSubtaskName = async () => {
+    try {
+      const results = await Promise.all(
+        subtasksUpdate.map(async sub => {
+          const response = await axios.put(`http://localhost:3000/subtarefa`, {
+            subtarefa_id: sub.subtarefa_id,
+            nome: sub.subtarefa_nome // Mantenha o mesmo nome do campo
+          });
+          return response.data;
+        })
+      );
+      
+      console.log("Todas as subtarefas foram atualizadas:", results);
+      return results;
+      
+    } catch (error) {
+      console.error("Falha ao atualizar subtarefas:", error);
+      throw error;
+    }
+  };
+ 
 
 
 
@@ -393,7 +430,9 @@ export default function TaskDetails({
                   <div className="flex gap-2 w-full">
                     <Input
                       value={subtask.subtarefa_nome}
-                      onChange={(e) => { handleSubtaskChange(subtask.subtarefa_id, e.target.value) }}
+                      onChange={(e) => {
+                        handleSubtaskChange(Number(subtask.subtarefa_id), e.target.value);
+                      }}
                       className="flex-1"
                     />
                     <Button
@@ -542,7 +581,15 @@ export default function TaskDetails({
           </Button>
           <Button
             variant="default"
-            onClick={onSave}
+            onClick={async () => {
+              try {
+                await onSave();
+                await handleUpdateSubtaskName();
+                // Adicione feedback visual de sucesso
+              } catch (error) {
+                // Adicione tratamento de erro visual
+              }
+            }}
             className="flex-1"
           >
             <Save size={16} className="mr-2" />
