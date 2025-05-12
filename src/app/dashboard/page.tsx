@@ -146,8 +146,6 @@ export default function Dashboard() {
       setCoordProjects(coordProjs);
       setNotCoordProjects(notCoordProjs);
       setExcludedProjects(exclProjs);
-
-      setProjects(data);
     } catch (error) {
       console.log("Error fetching projects", error);
       showNotification("Erro ao carregar projetos", false);
