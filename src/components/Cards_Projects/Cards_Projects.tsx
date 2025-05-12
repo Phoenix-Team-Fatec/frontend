@@ -215,6 +215,7 @@ export default function Cards_Projects({
         updateData
       );
 
+      window.location.reload();
       showNotification("Projeto atualizado com sucesso!", true);
       
       setIsModalOpen(false);
@@ -274,6 +275,39 @@ export default function Cards_Projects({
     const updatedArray = [...projectData[field]];
     updatedArray.splice(index, 1);
     setProjectData({ ...projectData, [field]: updatedArray });
+  };
+
+
+  const formatDateForInput = (dateStr: string) => {
+    try {
+      // Se a data já estiver no formato yyyy-MM-dd, retorna diretamente
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+      }
+      
+      // Tenta parsear a data de diferentes formas
+      let date = new Date(dateStr);
+      
+      // Se falhar, tenta adicionando o timezone
+      if (isNaN(date.getTime())) {
+        date = new Date(dateStr + 'T00:00:00');
+      }
+      
+      // Se ainda falhar, retorna string vazia
+      if (isNaN(date.getTime())) {
+        return '';
+      }
+      
+      // Formata para yyyy-MM-dd
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    } catch (e) {
+      console.error('Error formatting date for input:', e);
+      return '';
+    }
   };
   
 
@@ -388,7 +422,7 @@ export default function Cards_Projects({
               <Input
                 type="date"
                 name="startDate"
-                value={projectData.startDate}
+                value={formatDateForInput(projectData.startDate)}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
               />
@@ -398,7 +432,7 @@ export default function Cards_Projects({
               <Input
                 type="date"
                 name="endDate"
-                value={projectData.endDate}
+                value={formatDateForInput(projectData.endDate)}
                 onChange={handleChange}
                 className="w-full p-2 border rounded"
               />
