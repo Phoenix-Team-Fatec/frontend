@@ -17,7 +17,7 @@ interface CardProps {
   description: string;
   startDate: string;
   endDate?: string;
-  progress: number; 
+  progress: any; 
   users?: any[]; 
   onDelete: (id: number) => void;
   fetchProjectData?: (id: number) => void;
@@ -525,6 +525,13 @@ export default function Cards_Projects({
         </div>
 
         <div>
+          <h3 className="text-sm font-medium text-gray-500">Área de atuação:</h3>
+          <p className="mt-1 text-gray-700 whitespace-pre-line">
+            {areasList.find(area => area.area_atuacao_id === proj_area_atuacao_id)?.area_atuacao_nome || 'Nenhuma área definida'}
+          </p>
+        </div>
+
+        <div>
           <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
           <p className="mt-1 text-gray-700 whitespace-pre-line">
             {description || 'Nenhuma descrição fornecida'}
@@ -537,6 +544,20 @@ export default function Cards_Projects({
             <Progress value={progress} className="h-2 w-full" />
             <span className="text-sm font-medium text-blue-600">{progress}%</span>
           </div>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Instituições Parceiras:</h3>
+          <p className="mt-1 text-gray-700 whitespace-pre-line">
+          {proj_inst_parceiras.length > 0 ? proj_inst_parceiras.join(', ') : 'Nenhuma instituição parceira associada'}
+          </p>
+        </div>
+
+        <div>
+          <h3 className="text-sm font-medium text-gray-500">Instituições Financiadoras:</h3>
+          <p className="mt-1 text-gray-700 whitespace-pre-line">
+          {proj_inst_financiadoras.length > 0 ? proj_inst_financiadoras.join(', ') : 'Nenhuma instituição  financiadora associada'}
+          </p>
         </div>
       </div>
 
@@ -564,6 +585,8 @@ export default function Cards_Projects({
           </p>
         </div>
       </div>
+
+      
     </div>
 
     <DialogFooter className="border-t pt-4">

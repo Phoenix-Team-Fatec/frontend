@@ -39,7 +39,47 @@ export default function Dashboard() {
   const [filteredProjects, setFilteredProjects] = useState<any[]>([]);
   const [areaFilter, setAreaFilter] = useState("all");
   const [areasAtuacao, setAreasAtuacao] = useState<any[]>([]);
+  const [etapasPojeto, setEtapasProjeto] = useState<Record<number, any[]>>({})
+
+  const fetchAllEtapas = async (projects: any[]) => {
+    const etProj: Record<number, any[]> = {}
+
+    await Promise.all(
+      projects.map(async (project) => {
+        try {
+          const { data } = await axios.get(`http://localhost:3000/etapas/${project.projeto_proj_id}`)
+
+          etProj[project.projeto_proj_id] = data
+        } catch (error) {
+
+          console.error(`Erro ao buscar etapas para o projeto ${project.projeto_proj_id}`, error);
+          etProj[project.projeto_proj_id] = [];
+        }
+      })
+    )
+
+    setEtapasProjeto(etProj)
+  }
+
+  const getProgress = (etapas: any[]): number => {
+    let totalTarefas = 0
+    let tarefasFeitas = 0
+    
+    try {
+      etapas.forEach(etapa => {
+        const tarefas = etapa.tarefas || []
+    
+        totalTarefas += tarefas.length
+        tarefasFeitas += tarefas.filter((t: any) => t.tarefa_status === true).length
+      })
+    } catch (error) {
+      return 0
+    }
   
+    if (totalTarefas === 0) return 0
+  
+    return Math.round((tarefasFeitas / totalTarefas) * 100)
+  }
 
 
   useEffect(() => {
@@ -93,15 +133,18 @@ export default function Dashboard() {
         projeto.projeto_proj_excluido === true
       );
       
+
+      const notExclProjs = projetos.filter(projeto =>
+        projeto.projeto_proj_excluido == false
+      )
+      
       // Atualiza os estados
-      setProjects(projetos);
+      setProjects(notExclProjs);
+      await fetchAllEtapas(notExclProjs)
+
       setCoordProjects(coordProjs);
       setNotCoordProjects(notCoordProjs);
       setExcludedProjects(exclProjs);
-
-      console.log(coordProjects)
-      console.log(notCoordProjects)
-      console.log(excludedProjects)
 
       setProjects(data);
     } catch (error) {
@@ -405,7 +448,7 @@ export default function Dashboard() {
                     description={project.projeto_proj_descricao}
                     startDate={project.projeto_proj_data_inicio}
                     endDate={project.projeto_proj_data_fim || ""}
-                    progress={project.projeto_proj_status || 0}
+                    progress={getProgress(etapasPojeto[project.projeto_proj_id])}
                     users={project.users || []}
                     onDelete={() => handleDelete(project.projeto_proj_id)}
                     fetchProjectData={fetchProjetos}
