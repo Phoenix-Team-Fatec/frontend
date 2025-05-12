@@ -14,6 +14,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { getUserData } from "@/utils/auth";
 import { useUser } from "@/hook/UserData";
+import { Trash2 } from "lucide-react";
 
 
 export default function Dashboard() {
@@ -280,6 +281,7 @@ export default function Dashboard() {
       <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
+          
 
           <div className="flex flex-1 md:flex-none md:flex-row items-center gap-2 max-w-full md:max-w-[70%]">
             <div className="relative flex-1 md:w-[250px]">
@@ -327,6 +329,15 @@ export default function Dashboard() {
                   </option> 
                 ))}
               </select>
+
+              <Button
+                variant="outline"
+                className="h-9 px-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
+                onClick={() => console.log('Abrir lixeira')} // lógica aqui
+              >
+                <Trash2 size={18} className="mr-1" />
+                  Lixeira
+              </Button>
 
             {(searchTerm || statusFilter !== "all" || areaFilter !== "all") && (
               <Button
@@ -397,7 +408,7 @@ export default function Dashboard() {
                     projeto_proj_nome={
                       <Link
                         href={`/tasks?projectId=${project.projeto_proj_id}`}
-                        className="text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
+                        className="bg-white text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
                       >
                         {project.projeto_proj_nome}
                       </Link>
@@ -410,7 +421,9 @@ export default function Dashboard() {
                     onDelete={() => handleDelete(project.projeto_proj_id)}
                     fetchProjectData={fetchProjetos}
                     onNotify={showNotification}
-                    className="hover:shadow-lg transition-shadow duration-300"
+                    className="relative bg-white rounded-xl shadow-md overflow-hidden 
+                              transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/30 
+                              hover:border-blue-200 hover:-translate-y-1 hover:scale-[1.0] border-2 border-gray-100"
                     proj_valor_total={project.projeto_proj_valor_total}
                   />
                 </div>
