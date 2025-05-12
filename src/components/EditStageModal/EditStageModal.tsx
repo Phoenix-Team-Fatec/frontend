@@ -52,7 +52,11 @@ export function EditStageModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(stage.etapa_id, name, description, startDate, endDate);
+    const cleanedDescription = 
+    !description || description.trim() === "" || description.trim() === "<empty string>"
+      ? ""
+      : description;
+    onSave(stage.etapa_id, name, cleanedDescription, startDate, endDate);
     onOpenChange(false);
   };
 

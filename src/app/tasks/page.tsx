@@ -228,8 +228,7 @@ const ProjectTasks = () => {
   const editStage = async (stageId: number, newName: string, newDescription: string, dataInicio:string, dataFim:string) => {
     try {
       setLoading(true);
-      console.log(dataInicio)
-      console.log(dataFim)
+      console.log(newDescription)
       const response = await axios.put(`http://localhost:3000/etapas`, {
         etapaId: stageId,
         etapaNome: newName,
@@ -238,6 +237,8 @@ const ProjectTasks = () => {
         etapaDataFim: new Date(dataFim) 
     
       });
+
+      console.log(response.data)
 
       setStages(prevStages =>
         prevStages.map(stage =>
