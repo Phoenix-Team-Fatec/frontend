@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,18 +9,58 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import { Camera, Save } from "lucide-react";
 import { useUser } from "@/hook/UserData";
+import Cropper from "react-easy-crop";
+import axios from "axios";
+import { Upload } from "lucide-react";
+
+async function getCroppedImg(imageSrc: string, crop: any) {
+  const image = new Image();
+  image.src = imageSrc;
+  await new Promise((resolve) => (image.onload = resolve));
+
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  if (!ctx) return null;
+
+  canvas.width = crop.width;
+  canvas.height = crop.height;
+
+  ctx.drawImage(
+      image,
+      crop.x, crop.y, crop.width, crop.height,
+      0, 0, crop.width, crop.height
+  );
+
+  return new Promise<string>((resolve) => {
+      canvas.toBlob((blob) => {
+          if (blob) {
+              const croppedUrl = URL.createObjectURL(blob);
+              resolve(croppedUrl);
+          }
+      }, "image/jpeg");
+  });
+}
+
 
 export default function Settings() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const user = useUser();
-  
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [previousCroppedImage, setPreviousCroppedImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [showCropper, setShowCropper] = useState(false);
   // User data state
   const [userData, setUserData] = useState({
     nome: "",
     sobrenome: "",
     email: ""
   });
+  const user = useUser();
 
   // File upload state
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -76,21 +116,82 @@ export default function Settings() {
     }
   };
 
-  // Handle save
-  const handleSave = async () => {
+
+
+  const handleUpdate = async () => {
     setIsLoading(true);
-    
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const formData = new FormData();
+      formData.append("user_nome", userData.nome);
+      formData.append("user_sobrenome", userData.sobrenome);
+  
+      if (avatarFile) {
+        formData.append("user_foto", avatarFile); // ✅ Nome correto
+      }
+  
+      const response = await axios.put(
+        `http://localhost:3000/usuarios/${Number(user.user_id)}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+  
+      console.log(response.data);
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
-      console.error("Error saving settings:", error);
+      console.log("Erro ao atualizar usuário:", error);
     } finally {
       setIsLoading(false);
     }
   };
+  
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files || e.target.files.length == 0) {
+          return
+      }
+
+      const file = e.target.files?.[0];
+
+      setPhoto(file)
+      const previewURL = URL.createObjectURL(file);
+      setPreview(previewURL)
+
+      setCroppedImage(null)
+      setPreviousCroppedImage(null)
+
+      setShowCropper(true)
+  };
+
+  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+          setCroppedAreaPixels(croppedAreaPixels);
+      }, []);
+
+
+      const handleCropSave = async () => {
+        if (preview && croppedAreaPixels) {
+          const croppedImg = await getCroppedImg(preview, croppedAreaPixels);
+      
+          if (croppedImg) {
+            const response = await fetch(croppedImg);
+            const blob = await response.blob();
+            const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+            console.log(avatarFile)
+            setAvatarFile(file); // define o arquivo final
+            setAvatarPreview(URL.createObjectURL(file)); // exibe preview
+            setShowCropper(false);
+          }
+        }
+    };
+
+
+
+  
+  
   
   if (!initialized) {
     return null; 
@@ -128,12 +229,35 @@ export default function Settings() {
                       type="file" 
                       accept="image/*" 
                       className="hidden"
-                      onChange={handleAvatarChange}
+                      onChange={handlePhotoChange}
                     />
                   </label>
                 </div>
+
+                {showCropper && (
+                  <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+                    <div className="bg-white p-4 rounded-md shadow-md w-[90%] max-w-xl">
+                      <div className="relative w-full h-[400px]">
+                        <Cropper
+                          image={preview!}
+                          crop={crop}
+                          zoom={zoom}
+                          aspect={1}
+                          onCropChange={setCrop}
+                          onZoomChange={setZoom}
+                          onCropComplete={onCropComplete}
+                        />
+                      </div>
+                      <div className="flex justify-between mt-4">
+                        <Button onClick={() => setShowCropper(false)} variant="outline">Cancelar</Button>
+                        <Button onClick={handleCropSave} className="bg-[#355EAF] text-white hover:bg-[#2C4B8B]">Cortar e Salvar</Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 
-                <div className="space-y-4 flex-grow">
+                 <div className="space-y-4 flex-grow">
                   <div className="space-y-2">
                     <Label htmlFor="nome">Nome</Label>
                     <Input 
@@ -172,7 +296,7 @@ export default function Settings() {
             </CardContent>
             <CardFooter className="flex justify-end border-t p-6">
               <Button 
-                onClick={handleSave} 
+                onClick={() => handleUpdate()} 
                 disabled={isLoading}
                 className="bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] cursor-pointer"
               >
