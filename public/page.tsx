@@ -9,22 +9,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import { Camera, Save } from "lucide-react";
 import { useUser } from "@/hook/UserData";
-import CryptoJS from "crypto-js";
 import axios from "axios";
-import { setCookie } from "cookies-next";
-import { useRouter } from "next/navigation";
 
 export default function Settings() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialized, setInitialized] = useState(false);
-  const router = useRouter()
   const user = useUser();
-
+  
   // User data state
   const [userData, setUserData] = useState({
-    user_nome: "",
-    user_sobrenome: "",
-    user_email: ""
+    nome: "",
+    sobrenome: "",
+    email: ""
   });
 
   // File upload state
@@ -50,9 +46,9 @@ export default function Settings() {
   useEffect(() => {
     if (user) {
       setUserData({
-        user_nome: user.user_nome || "",
-        user_sobrenome: user.user_sobrenome || "",
-        user_email: user.user_email || ""
+        nome: user.user_nome || "",
+        sobrenome: user.user_sobrenome || "",
+        email: user.user_email || ""
       });
     }
   }, [user]);
@@ -71,7 +67,7 @@ export default function Settings() {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setAvatarFile(file);
-
+      
       // Create preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -84,46 +80,22 @@ export default function Settings() {
   // Handle save
   const handleSave = async () => {
     setIsLoading(true);
-
+    
     try {
-      const formData = new FormData();
-      formData.append("user_nome", userData.user_nome);
-      formData.append("user_sobrenome", userData.user_sobrenome);
-      formData.append("user_email", userData.user_email);
-
-      if (avatarFile) {
-        formData.append("user_foto", avatarFile, avatarFile.name);
-      }
-
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const response = await axios.put(`http://localhost:3000/usuarios/${user.user_id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const secretKey = "74b94f6e852f831521bba51e73fe4d5a";
-      const encryptedData = CryptoJS.AES.encrypt(
-        JSON.stringify(response.data),
-        secretKey
-      ).toString();
-
-      sessionStorage.setItem("userData", encryptedData);
-      setCookie("userData", encryptedData, {
-        maxAge: 60 * 60 * 24,
-        path: '/',
-      });
-
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1500);
+      await axios.put(`http://localhost:3000/usuarios/${user.user_id}`, userData)
+      
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       console.error("Error saving settings:", error);
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   if (!initialized) {
-    return null;
+    return null; 
   }
 
   const contentMargin = sidebarOpen ? "ml-[250px]" : "ml-[80px]";
@@ -153,56 +125,56 @@ export default function Settings() {
                   </Avatar>
                   <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-[#355EAF] text-white p-2 rounded-full cursor-pointer shadow-md hover:bg-[#2C4B8B] transition-colors">
                     <Camera size={16} />
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
+                    <input 
+                      id="avatar-upload" 
+                      type="file" 
+                      accept="image/*" 
                       className="hidden"
                       onChange={handleAvatarChange}
                     />
                   </label>
                 </div>
-
+                
                 <div className="space-y-4 flex-grow">
                   <div className="space-y-2">
-                    <Label htmlFor="user_nome">user_nome</Label>
-                    <Input
-                      id="user_nome"
-                      name="user_nome"
-                      value={userData.user_nome}
+                    <Label htmlFor="nome">Nome</Label>
+                    <Input 
+                      id="nome" 
+                      name="nome" 
+                      value={userData.nome} 
                       onChange={handleProfileChange}
-                      placeholder="Seu user_nome"
+                      placeholder="Seu nome" 
                     />
                   </div>
-
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="user_sobrenome">user_Sobrenome</Label>
-                    <Input
-                      id="user_sobrenome"
-                      name="user_sobrenome"
-                      value={userData.user_sobrenome}
+                    <Label htmlFor="sobrenome">Sobrenome</Label>
+                    <Input 
+                      id="sobrenome" 
+                      name="sobrenome" 
+                      value={userData.sobrenome} 
                       onChange={handleProfileChange}
-                      placeholder="Seu user_sobrenome"
+                      placeholder="Seu sobrenome" 
                     />
                   </div>
-
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="user_email">user_Email</Label>
-                    <Input
-                      id="user_email"
-                      name="user_email"
-                      type="email"
-                      value={userData.user_email}
+                    <Label htmlFor="email">Email</Label>
+                    <Input 
+                      id="email" 
+                      name="email" 
+                      type="email" 
+                      value={userData.email} 
                       onChange={handleProfileChange}
-                      placeholder="seu@user_email.com"
+                      placeholder="seu@email.com" 
                     />
                   </div>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end border-t p-6">
-              <Button
-                onClick={handleSave}
+              <Button 
+                onClick={handleSave} 
                 disabled={isLoading}
                 className="bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] cursor-pointer"
               >
