@@ -13,9 +13,11 @@ import { Trash2, RotateCw } from "lucide-react";
 
 export default function RecycleBin() {
   const router = useRouter();
+  const userData = getUserData();
   const [authChecked, setAuthChecked] = useState(false);
   const [excludedProjects, setExcludedProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(Number);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isSuccess, setIsSuccess] = useState(true);
@@ -23,21 +25,23 @@ export default function RecycleBin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   //Verifica a autenticação ao carregar a página
-  useEffect(() => {
-    if (!getUserData()) {
+
+    useEffect(() => {
+      if (!userData) {
       router.push('/sign-in');
     } else {
       setAuthChecked(true);
-      fetchExcludedProjects();//inicia a busca de projetos excluídos
+      setUserId(Number(userData.user_id))
+      fetchExcludedProjects(Number(userData.user_id));//inicia a busca de projetos excluídos
     }
-  }, []);
+  }, [router]);
 
   //Integração com GET /projetos/excluidos
-  const fetchExcludedProjects = async () => {
+  const fetchExcludedProjects = async (id: number) => {
     try {
       setLoading(true);
       //CHamada pra endpoint que lista os projetos excluidos
-      const { data } = await axios.get('http://localhost:3000/projetos/excluidos');
+      const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjsExcluidos/${id}`);
       setExcludedProjects(data);
     } catch (error) {
       console.error("Erro ao carregar lixeira", error);
@@ -48,17 +52,15 @@ export default function RecycleBin() {
   };
 
   //Integração com PUT /projeto/restore/:id
-  const handleRestore = async (id: number) => {
-    try {
-        //chamada pra endpoint que restaura o projeto
-      await axios.put(`http://localhost:3000/projeto/restore/${id}`);
-      showNotification("Projeto restaurado com sucesso!", true);
-      fetchExcludedProjects(); //Atualiza a lista depois da restauração
-    } catch (error) {
-      console.error("Erro ao restaurar projeto:", error);
-      showNotification("Erro ao restaurar projeto", false);
-    }
-  };
+const handleRestore = async (proj_id: number) => {
+  try {
+    const response = await axios.put(`http://localhost:3000/resturaProj/${proj_id}`);
+    console.log('Resposta do servidor:', response.data); // Adiciona log
+    showNotification("Projeto restaurado com sucesso!", true);
+    fetchExcludedProjects(userId);
+  } catch (error) {
+  }
+};
 
   const showNotification = (message: string, success: boolean) => {
     setPopupMessage(message);
@@ -92,7 +94,6 @@ export default function RecycleBin() {
             />
             <Button //reload dados do backend
               variant="outline"
-              onClick={fetchExcludedProjects}
             >
               <RotateCw size={18} className="mr-2" />
               Atualizar
@@ -121,13 +122,13 @@ export default function RecycleBin() {
                 project.projeto_proj_nome.toLowerCase().includes(searchTerm.toLowerCase())
               )
               .map(project => (
-                <Cards_Projects
-                  key={project.projeto_proj_id}
-                  {...project}
-                  isDeleted={true} //Modo Lixeira
-                  onRestore={handleRestore} //Passa função de restauração
-                  className="opacity-90 bg-gray-50 border-dashed border-red-200"
-                />
+                  <Cards_Projects
+                    key={project.projeto_proj_id}
+                    {...project}
+                    isDeleted={true}
+                    onRestore={() => handleRestore(project.projeto_proj_id)} // Passa o ID do projeto
+                    className="opacity-90 bg-gray-50 border-dashed border-red-200"
+                  />
               ))}
           </div>
         )}
