@@ -21,12 +21,12 @@ interface CardProps {
   users?: any[]; 
   onDelete: (id: number) => void;
   fetchProjectData?: (id: number) => void;
-  onNotify?: (message: string, success: boolean) => void; // Add this prop
+  onNotify?: (message: string, success: boolean) => void;
   className?: string;
   proj_valor_total: React.ReactNode | number;
   proj_inst_parceiras: string[];
   proj_inst_financiadoras: string[];
-  proj_area_atuacao_id:number
+  proj_area_atuacao_id: number;
 }
 
 type ReactElementWithProps = React.ReactElement & {
@@ -36,9 +36,9 @@ type ReactElementWithProps = React.ReactElement & {
   };
 };
 
-interface Area_atuacao{
+interface Area_atuacao {
   area_atuacao_id: number,
-  area_atuacao_nome:string
+  area_atuacao_nome: string
 }
 
 export default function Cards_Projects({
@@ -55,7 +55,7 @@ export default function Cards_Projects({
   proj_area_atuacao_id = 0,
   onDelete,
   fetchProjectData,
-  onNotify, // Add this to parameters
+  onNotify,
   className = "",
 }: CardProps) {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -68,11 +68,6 @@ export default function Cards_Projects({
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
   const [storedAreas, setStoredAreas] = useState<Area_atuacao[]>([]);
 
-
- 
-
-  
-  
   const extractProjectName = (): string => {
     if (typeof projeto_proj_nome === 'string') {
       return projeto_proj_nome;
@@ -80,7 +75,6 @@ export default function Cards_Projects({
     
     if (React.isValidElement(projeto_proj_nome)) {
       const element = projeto_proj_nome as ReactElementWithProps;
-      
       const linkChildren = element.props.children;
       
       if (typeof linkChildren === 'string') {
@@ -108,7 +102,6 @@ export default function Cards_Projects({
     
     if (React.isValidElement(proj_valor_total)) {
       const element = proj_valor_total as ReactElementWithProps;
-      
       const linkChildren = element.props.children;
       
       if (typeof linkChildren === 'number') {
@@ -131,33 +124,22 @@ export default function Cards_Projects({
   
   useEffect(() => {
     const fetchAreaAtuacao = async () => {
-      try{
-
-
-        const {data} = await axios.get("http://localhost:3000/area_atuacao")
-
-        
-        
-        setAreasList(data)
-        setStoredAreas(data)
-      
-      }catch(error){
-        console.log(error)
+      try {
+        const { data } = await axios.get("http://localhost:3000/area_atuacao");
+        setAreasList(data);
+        setStoredAreas(data);
+      } catch(error) {
+        console.log(error);
       }
     }
 
-    fetchAreaAtuacao()
-  },[])
+    fetchAreaAtuacao();
+  }, []);
 
-  
-  
-      const toggleAreaSelection = (area: number) => {
-        setSelectedArea(area)
-      };
-  
-  
+  const toggleAreaSelection = (area: number) => {
+    setSelectedArea(area);
+  };
 
-  
   const [projectData, setProjectData] = useState({
     projeto_proj_nome: extractProjectName(),
     description,
@@ -169,19 +151,16 @@ export default function Cards_Projects({
     proj_area_atuacao_id
   });
 
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setProjectData({ ...projectData, [e.target.name]: e.target.value });
   };
 
   const showNotification = (message: string, success: boolean) => {
-    // If parent provided a notification function, use it
     if (onNotify) {
       onNotify(message, success);
       return;
     }
     
-    // Otherwise use local notification
     setPopupMessage(message);
     setIsSuccess(success);
     setShowPopup(true);
@@ -193,8 +172,6 @@ export default function Cards_Projects({
 
   const handleSave = async () => {
     try {
- 
-
       const updateData = {
         proj_nome: projectData.projeto_proj_nome,
         proj_descricao: projectData.description,
@@ -206,10 +183,6 @@ export default function Cards_Projects({
         area_atuacao_id: selectedArea 
       };
 
-
-
-      console.log(updateData)
-
       await axios.put(
         `http://localhost:3000/projeto/update/${id}`, 
         updateData
@@ -217,17 +190,13 @@ export default function Cards_Projects({
 
       window.location.reload();
       showNotification("Projeto atualizado com sucesso!", true);
-      
       setIsModalOpen(false);
       
       if (typeof fetchProjectData === 'function') {
         fetchProjectData(id);
       }
-
-
     } catch (error) {
       console.error("Erro ao atualizar projeto:", error);
-
       let errorMessage = "Erro ao atualizar projeto";
       
       if (axios.isAxiosError(error) && error.response?.data?.message) {
@@ -238,7 +207,6 @@ export default function Cards_Projects({
     }
   };
 
-
   const handleDelete = () => {
     onDelete(id);
     setIsDeleteModalOpen(false);
@@ -246,10 +214,8 @@ export default function Cards_Projects({
 
   const formatDate = (dateStr: string) => { 
     try {
-      // Primeiro tenta parsear sem adicionar hora
       const date = new Date(dateStr);
       
-      // Se a data for inválida, tenta com o timezone
       if (isNaN(date.getTime())) {
         return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR');
       }
@@ -277,28 +243,22 @@ export default function Cards_Projects({
     setProjectData({ ...projectData, [field]: updatedArray });
   };
 
-
   const formatDateForInput = (dateStr: string) => {
     try {
-      // Se a data já estiver no formato yyyy-MM-dd, retorna diretamente
       if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         return dateStr;
       }
       
-      // Tenta parsear a data de diferentes formas
       let date = new Date(dateStr);
       
-      // Se falhar, tenta adicionando o timezone
       if (isNaN(date.getTime())) {
         date = new Date(dateStr + 'T00:00:00');
       }
       
-      // Se ainda falhar, retorna string vazia
       if (isNaN(date.getTime())) {
         return '';
       }
       
-      // Formata para yyyy-MM-dd
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -309,11 +269,9 @@ export default function Cards_Projects({
       return '';
     }
   };
-  
 
   return (
     <>
-      {/* Only render the Popup if we're not using the parent's notification */}
       {!onNotify && (
         <Popup 
           isOpen={showPopup}
@@ -340,7 +298,6 @@ export default function Cards_Projects({
             className="cursor-pointer hover:text-gray-800"
             onClick={() => setIsDetailsModalOpen(true)}
           />
-
         </div>
 
         <CardContent className="p-0">
@@ -394,8 +351,9 @@ export default function Cards_Projects({
         </CardContent>
       </Card>
 
+      {/* Modal de Edição */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full">
+        <DialogContent className="p-8 bg-white rounded-xl shadow-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold tracking-tight text-center mb-6">Editar Projeto</DialogTitle>
           </DialogHeader>
@@ -440,97 +398,92 @@ export default function Cards_Projects({
           </div>
 
           <div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Parceiras:</label>
-  {projectData.proj_inst_parceiras.map((parceira, index) => (
-    <div key={index} className="flex items-center gap-2 mb-2">
-      <input
-        type="text"
-        value={parceira}
-        onChange={(e) => handleArrayChange(e, index, 'proj_inst_parceiras')}
-        className="flex-1 border p-2 rounded-md"
-      />
-      <Button
-        type="button"
-        onClick={() => removeArrayField(index, 'proj_inst_parceiras')}
-        className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
-      >
-        Remover
-      </Button>
-    </div>
-  ))}
-  <Button
-    type="button"
-    onClick={() => addArrayField('proj_inst_parceiras')}
-    className="text-sm bg-gray-200 px-2 py-1 rounded"
-  >
-    + Adicionar parceira
-  </Button>
-</div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Parceiras:</label>
+            {projectData.proj_inst_parceiras.map((parceira, index) => (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  value={parceira}
+                  onChange={(e) => handleArrayChange(e, index, 'proj_inst_parceiras')}
+                  className="flex-1 border p-2 rounded-md"
+                />
+                <Button
+                  type="button"
+                  onClick={() => removeArrayField(index, 'proj_inst_parceiras')}
+                  className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
+                >
+                  Remover
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={() => addArrayField('proj_inst_parceiras')}
+              className="text-sm bg-gray-200 px-2 py-1 rounded"
+            >
+              + Adicionar parceira
+            </Button>
+          </div>
 
-<div className="mt-4">
-  <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Financiadoras:</label>
-  {projectData.proj_inst_financiadoras.map((financiadora, index) => (
-    <div key={index} className="flex items-center gap-2 mb-2">
-      <input
-        type="text"
-        value={financiadora}
-        onChange={(e) => handleArrayChange(e, index, 'proj_inst_financiadoras')}
-        className="flex-1 border p-2 rounded-md"
-      />
-      <Button
-        type="button"
-        onClick={() => removeArrayField(index, 'proj_inst_financiadoras')}
-        className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
-      >
-        Remover
-      </Button>
-    </div>
-  ))}
-  <Button
-    type="button"
-    onClick={() => addArrayField('proj_inst_financiadoras')}
-    className="text-sm bg-gray-200 px-2 py-1 rounded"
-  >
-    + Adicionar financiadora
-  </Button>
-</div>
-
-
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Instituições Financiadoras:</label>
+            {projectData.proj_inst_financiadoras.map((financiadora, index) => (
+              <div key={index} className="flex items-center gap-2 mb-2">
+                <input
+                  type="text"
+                  value={financiadora}
+                  onChange={(e) => handleArrayChange(e, index, 'proj_inst_financiadoras')}
+                  className="flex-1 border p-2 rounded-md"
+                />
+                <Button
+                  type="button"
+                  onClick={() => removeArrayField(index, 'proj_inst_financiadoras')}
+                  className="bg-red-100 text-red-600 hover:bg-red-200 px-2 py-1 rounded"
+                >
+                  Remover
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              onClick={() => addArrayField('proj_inst_financiadoras')}
+              className="text-sm bg-gray-200 px-2 py-1 rounded"
+            >
+              + Adicionar financiadora
+            </Button>
+          </div>
           
           <input
             type="number"
             name="proj_valor_total"
             value={projectData.proj_valor_total}
             onChange={handleChange}
-            className="w-full border p-2 rounded-md text-lg font-bold"
+            className="w-full border p-2 rounded-md text-lg font-bold mt-4"
           />
 
+          <div className="space-y-2 mt-4">
+            <Label>Áreas disponíveis</Label>
+            <div className="flex flex-wrap gap-2">
+              {storedAreas.map((area) => (
+                <div
+                  key={`stored-${area.area_atuacao_id}`}
+                  onClick={() => toggleAreaSelection(area.area_atuacao_id)}
+                  className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
+                    (selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id
+                      ? 'bg-green-100 border-green-500 text-green-800'
+                      : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  {(selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id && <Check size={14} className="text-green-600" />}
+                  <span>{area.area_atuacao_nome}</span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-       
-            <div className="space-y-2">
-              <Label>Áreas disponíveis</Label>
-              <div className="flex flex-wrap gap-2">
-                {storedAreas.map((area) => (
-                  <div
-                    key={`stored-${area.area_atuacao_id}`}
-                    onClick={() => toggleAreaSelection(area.area_atuacao_id)}
-                    className={`px-3 py-1 rounded-full cursor-pointer flex items-center space-x-1 border ${
-                      (selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id
-                        ? 'bg-green-100 border-green-500 text-green-800'
-                        : 'bg-gray-100 border-gray-300 hover:bg-gray-200'
-                    }`}
-                  >
-                    {(selectedArea ?? projectData.proj_area_atuacao_id) === area.area_atuacao_id && <Check size={14} className="text-green-600" />}
-                    <span>{area.area_atuacao_nome}</span>
-                  </div>
-                ))}
-              </div>
-           </div>
-
-         
           <Button
-            className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer mt-4"
-            onClick={() => handleSave()}
+            className="w-full bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] font-medium py-2 rounded cursor-pointer mt-6"
+            onClick={handleSave}
           >
             Salvar
           </Button>
@@ -539,113 +492,110 @@ export default function Cards_Projects({
 
       {/* Modal de Detalhes */}
       <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-  <DialogContent className="max-w-2xl rounded-lg">
-    <DialogHeader>
-      <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-        <Folder className="text-blue-600" size={20} />
-        Detalhes do Projeto
-      </DialogTitle>
-      <DialogDescription className="text-gray-500">
-        Informações completas sobre o projeto
-      </DialogDescription>
-    </DialogHeader>
+        <DialogContent className="max-w-2xl rounded-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <Folder className="text-blue-600" size={20} />
+              Detalhes do Projeto
+            </DialogTitle>
+            <DialogDescription className="text-gray-500">
+              Informações completas sobre o projeto
+            </DialogDescription>
+          </DialogHeader>
 
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
-      {/* Seção de Informações Básicas */}
-      <div className="space-y-4">
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Nome do Projeto</h3>
-          <p className="mt-1 text-lg font-semibold text-gray-900">{projeto_proj_nome}</p>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Nome do Projeto</h3>
+                <p className="mt-1 text-lg font-semibold text-gray-900">{projeto_proj_nome}</p>
+              </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Área de atuação:</h3>
-          <p className="mt-1 text-gray-700 whitespace-pre-line">
-            {areasList.find(area => area.area_atuacao_id === proj_area_atuacao_id)?.area_atuacao_nome || 'Nenhuma área definida'}
-          </p>
-        </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Área de atuação:</h3>
+                <p className="mt-1 text-gray-700 whitespace-pre-line">
+                  {areasList.find(area => area.area_atuacao_id === proj_area_atuacao_id)?.area_atuacao_nome || 'Nenhuma área definida'}
+                </p>
+              </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
-          <p className="mt-1 text-gray-700 whitespace-pre-line">
-            {description || 'Nenhuma descrição fornecida'}
-          </p>
-        </div>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Descrição</h3>
+                <p className="mt-1 text-gray-700 whitespace-pre-line">
+                  {description || 'Nenhuma descrição fornecida'}
+                </p>
+              </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Progresso</h3>
-          <div className="mt-2 flex items-center gap-3">
-            <Progress value={progress} className="h-2 w-full" />
-            <span className="text-sm font-medium text-blue-600">{progress}%</span>
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Progresso</h3>
+                <div className="mt-2 flex items-center gap-3">
+                  <Progress value={progress} className="h-2 w-full" />
+                  <span className="text-sm font-medium text-blue-600">{progress}%</span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Instituições Parceiras:</h3>
+                <p className="mt-1 text-gray-700 whitespace-pre-line">
+                {proj_inst_parceiras.length > 0 ? proj_inst_parceiras.join(', ') : 'Nenhuma instituição parceira associada'}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Instituições Financiadoras:</h3>
+                <p className="mt-1 text-gray-700 whitespace-pre-line">
+                {proj_inst_financiadoras.length > 0 ? proj_inst_financiadoras.join(', ') : 'Nenhuma instituição financiadora associada'}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Data de Início</h3>
+                  <p className="mt-1 text-gray-700">
+                    {startDate ? formatDate(startDate) : 'Não definida'}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Data de Término</h3>
+                  <p className="mt-1 text-gray-700">
+                    {endDate ? formatDate(endDate) : 'Não definida'}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Valor Total</h3>
+                <p className="mt-1 text-xl font-semibold text-green-600">
+                  {proj_valor_total ? `R$ ${Number(proj_valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'Não informado'}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Instituições Parceiras:</h3>
-          <p className="mt-1 text-gray-700 whitespace-pre-line">
-          {proj_inst_parceiras.length > 0 ? proj_inst_parceiras.join(', ') : 'Nenhuma instituição parceira associada'}
-          </p>
-        </div>
+          <DialogFooter className="border-t pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDetailsModalOpen(false)}
+              className="mr-2"
+            >
+              Fechar
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsDetailsModalOpen(false);
+                setIsModalOpen(true);
+              }}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Editar Projeto
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Instituições Financiadoras:</h3>
-          <p className="mt-1 text-gray-700 whitespace-pre-line">
-          {proj_inst_financiadoras.length > 0 ? proj_inst_financiadoras.join(', ') : 'Nenhuma instituição  financiadora associada'}
-          </p>
-        </div>
-      </div>
-
-      {/* Seção de Metadados */}
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Data de Início</h3>
-            <p className="mt-1 text-gray-700">
-              {startDate ? formatDate(startDate) : 'Não definida'}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-gray-500">Data de Término</h3>
-            <p className="mt-1 text-gray-700">
-              {endDate ? formatDate(endDate) : 'Não definida'}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-sm font-medium text-gray-500">Valor Total</h3>
-          <p className="mt-1 text-xl font-semibold text-green-600">
-            {proj_valor_total ? `R$ ${Number(proj_valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : 'Não informado'}
-          </p>
-        </div>
-      </div>
-
-      
-    </div>
-
-    <DialogFooter className="border-t pt-4">
-      <Button 
-        variant="outline" 
-        onClick={() => setIsDetailsModalOpen(false)}
-        className="mr-2"
-      >
-        Fechar
-      </Button>
-      <Button 
-        onClick={() => {
-          setIsDetailsModalOpen(false);
-          setIsModalOpen(true);
-        }}
-      >
-        <Pencil className="mr-2 h-4 w-4" />
-        Editar Projeto
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
+      {/* Modal de Exclusão */}
       <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-md w-full">
+        <DialogContent className="p-6 bg-white rounded-xl shadow-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold tracking-tight text-center mb-4">Tem certeza que deseja excluir o projeto?</DialogTitle>
           </DialogHeader>
