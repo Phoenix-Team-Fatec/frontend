@@ -24,6 +24,7 @@ interface Task {
     user_nome: string;
     user_email: string;
   }>;
+  pontos_historias:number
 }
 
 export default function Home() {
@@ -58,7 +59,8 @@ export default function Home() {
             etapa_nome: 'Sem etapa'
           },
           tarefa_data_inicio: formatDate(task.tarefa_data_inicio),
-          tarefa_data_fim: formatDate(task.tarefa_data_fim)
+          tarefa_data_fim: formatDate(task.tarefa_data_fim),
+          pontos_historias: task.pontos_historias
         }));
     
         setTasks(tasksWithEtapa);
@@ -209,8 +211,10 @@ export default function Home() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarefa</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Etapa</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pontos Histórias</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Limite</th>
+
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -231,6 +235,7 @@ export default function Home() {
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_nome}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{task.etapa.etapa_nome}</td>
+                        <td className="px-6 py-4 text-sm text-gray-500">{task.pontos_historias}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_data_inicio}</td>
                         <td className="px-6 py-4 text-sm text-gray-500">{task.tarefa_data_fim}</td>
                       </tr>
@@ -262,6 +267,9 @@ export default function Home() {
                   <h3 className="font-medium text-lg mb-1">{task.tarefa_nome}</h3>
                   <div className="text-sm text-gray-600 mb-1">
                     <span className="font-medium">Etapa:</span> {task.etapa.etapa_nome}
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    <span className="font-medium">Pontos Histórias:</span> {task.pontos_historias}
                   </div>
                   <div className="text-sm text-gray-600 mb-1">
                     <span className="font-medium">Início:</span> {task.tarefa_data_inicio}

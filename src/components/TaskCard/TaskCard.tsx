@@ -10,6 +10,7 @@ interface TaskCardProps {
     tarefa_data_inicio: string;
     tarefa_data_fim: string;
     tarefa_status: boolean;
+    pontos_historias:number
   };
   onClick: () => void;
   onEdit: () => void;
@@ -60,8 +61,10 @@ export default function TaskCard({ task, onClick, onEdit, onDelete, isCoordenado
 
         <p className="text-gray-600 text-sm mb-2">{task.tarefa_descricao}</p>
         <div className="text-xs text-gray-500 space-y-1">
-          <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
-          <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div>
+          <div className="text-gray-600 text-sm mb-2">Pontos de História: {task.pontos_historias}</div>
+          <br />
+         <div>Início: {new Date(task.tarefa_data_inicio).toLocaleDateString()}</div>
+          <div>Término: {new Date(task.tarefa_data_fim).toLocaleDateString()}</div> 
         </div>
 
         <div className={`text-xs mt-2 font-medium py-1 px-2 rounded-full inline-block ${task.tarefa_status ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"

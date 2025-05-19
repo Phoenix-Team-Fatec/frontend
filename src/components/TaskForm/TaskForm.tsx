@@ -11,6 +11,7 @@ interface TaskFormProps {
     data_inicio: string;
     data_fim: string;
     tarefa_status: boolean;
+    pontos_historias:number
   };
   onChange: (field: string, value: string | boolean) => void;
   onSubmit: () => void;
@@ -36,6 +37,14 @@ export default function TaskForm({ task, onChange, onSubmit, isSubmitting, minDa
         placeholder="Descrição"
         value={task.descricao}
         onChange={(e) => onChange("descricao", e.target.value)}
+        className="w-full p-2 border rounded"
+      />
+
+        <Input
+        placeholder="Pontos de História"
+        value={task.pontos_historias}
+        onChange={(e) => onChange("pontos_historias", e.target.value)}
+        required
         className="w-full p-2 border rounded"
       />
 

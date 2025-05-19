@@ -22,6 +22,7 @@ interface Tarefa {
   tarefa_data_fim: string;
   tarefa_status: boolean;
   etapa_id: number;
+  pontos_historia:number
 }
 
 interface Etapa {
@@ -57,7 +58,8 @@ const ProjectTasks = () => {
     descricao: "",
     data_inicio: new Date().toISOString().split('T')[0],
     data_fim: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    tarefa_status: false
+    tarefa_status: false,
+    pontos_historias: 0
   };
   const [newStage, setNewStage] = useState(initialStageState);
   const [selectedStage, setSelectedStage] = useState<number | null>(null);
@@ -265,7 +267,8 @@ const ProjectTasks = () => {
         data_inicio: new Date(newTask.data_inicio + 'T12:00:00').toISOString().split('T')[0],
         data_fim: new Date(newTask.data_fim + 'T12:00:00').toISOString().split('T')[0],
         tarefa_status: newTask.tarefa_status,
-        etapa_id: etapaId
+        etapa_id: etapaId,
+        pontos_historias: newTask.pontos_historias
       };
       const response = await axios.post(`http://localhost:3000/tarefa`, taskData);
       for (const user of responsibles) {
@@ -333,7 +336,8 @@ const ProjectTasks = () => {
       data_inicio: editableTask.tarefa_data_inicio,
       data_fim: editableTask.tarefa_data_fim,
       tarefa_status: editableTask.tarefa_status,
-      etapa_id: editableTask.etapa_id
+      etapa_id: editableTask.etapa_id,
+      pontos_historias: editableTask.pontos_historias
     };
     try {
       setLoading(true);
