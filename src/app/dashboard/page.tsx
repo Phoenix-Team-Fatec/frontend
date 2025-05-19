@@ -374,7 +374,7 @@ export default function Dashboard() {
               <Button
                 variant="outline"
                 className="h-9 px-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-                onClick={() => console.log('Abrir lixeira')} // lógica aqui
+                onClick={()  => router.push('/dashboard/RecycleBin')} // Route lixeira
               >
                 <Trash2 size={18} className="mr-1" />
                   Lixeira

@@ -10,6 +10,7 @@ import { Label } from "../ui/label";
 import { Trash2, Check } from "lucide-react";
 import Popup from "@/components/Feedback/popup";
 import axios from "axios";
+import { RotateCw } from "lucide-react";
 
 interface CardProps {
   id: number;
@@ -27,6 +28,8 @@ interface CardProps {
   proj_inst_parceiras: string[];
   proj_inst_financiadoras: string[];
   proj_area_atuacao_id:number
+  isDeleted?: boolean; // pra verificar se o projeto está excluído(lixeira)
+  onRestore?: (id: number) => void; //pra restauração projeto
 }
 
 type ReactElementWithProps = React.ReactElement & {
@@ -56,6 +59,8 @@ export default function Cards_Projects({
   onDelete,
   fetchProjectData,
   onNotify, // Add this to parameters
+  isDeleted, // Recebe Status de exclusão
+  onRestore, //Recebe função de restauração
   className = "",
 }: CardProps) {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -325,16 +330,30 @@ export default function Cards_Projects({
     
       <Card className={`w-[300px] bg-gray-200 p-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border border-gray-100 overflow-hidden relative cursor-pointer ${className}`}>
         <div className="absolute top-2 right-2 flex space-x-2 text-gray-600">
-          <Pencil
-            size={16}
-            className="cursor-pointer hover:text-black"
-            onClick={() => setIsModalOpen(true)}
-          />
-          <Trash
-            size={16}
-            className="cursor-pointer hover:text-red-500"
-            onClick={() => setIsDeleteModalOpen(true)}
-          />
+          {!isDeleted ? (// Condição para excluido - (lixeira)
+            <>
+              <Pencil
+                size={16}
+                className="cursor-pointer hover:text-black"
+                onClick={() => setIsModalOpen(true)}
+              />
+              <Trash 
+                size={16}
+                className="cursor-pointer hover:text-red-500"
+                onClick={() => setIsDeleteModalOpen(true)}
+              />
+            </>
+          ) : (
+            //botão de restauração p lixeira 
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onRestore && onRestore(id)} //chame a função de restauração
+              className="text-green-600 hover:bg-green-100"
+            >
+              <RotateCw size={16} />
+            </Button>
+          )}
           <MoreVertical 
             size={16} 
             className="cursor-pointer hover:text-gray-800"
