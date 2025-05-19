@@ -505,6 +505,25 @@ export default function TaskDetails({
         )}
       </div>
 
+      {/* {Pontos Historia} */}
+      <div>
+        <Label className="block text-sm font-medium text-gray-700 mb-2">Pontos de História</Label>
+        {isEditing ? (
+          <Input
+            value={task.pontos_historias}
+            onChange={(e) => onTaskChange("pontos_historias", e.target.value)}
+            className="min-h-[100px]"
+          />
+        ) : (
+          <div className="bg-gray-50 p-4 rounded">
+            <p className="text-gray-700">
+              {task.pontos_historias || "Nenhum ponto de história fornecido"}
+            </p>
+          </div>
+        )}
+      </div>
+
+
       {/* Datas */}
       <div className="grid grid-cols-2 gap-4">
         <div>
