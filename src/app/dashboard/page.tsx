@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { getUserData } from "@/utils/auth";
 import { useUser } from "@/hook/UserData";
 import { Trash2 } from "lucide-react";
-
+import { Switch } from "@/components/ui/switch";
 
 export default function Dashboard() {
   const userDataHook = useUser()
@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [areaFilter, setAreaFilter] = useState("all");
   const [areasAtuacao, setAreasAtuacao] = useState<any[]>([]);
   const [etapasPojeto, setEtapasProjeto] = useState<Record<number, any[]>>({})
+  const [coordenaFilter, setCoordenaFilter] = useState<boolean | null>(null);
 
   const fetchAllEtapas = async (projects: any[]) => {
     const etProj: Record<number, any[]> = {}
@@ -52,7 +53,6 @@ export default function Dashboard() {
 
           etProj[project.projeto_proj_id] = data
         } catch (error) {
-
           console.error(`Erro ao buscar etapas para o projeto ${project.projeto_proj_id}`, error);
           etProj[project.projeto_proj_id] = [];
         }
@@ -82,31 +82,24 @@ export default function Dashboard() {
     return Math.round((tarefasFeitas / totalTarefas) * 100)
   }
 
-
   useEffect(() => {
-    
-
-    console.log()
-
     if (!userData) {
       router.push('/sign-in');
     } else {
       setAuthChecked(true);
-      
       setUserId(Number(userData.user_id))
     }
   }, [router]);
 
-    // Função para buscar as áreas de atuação
-    const fetchAreasAtuacao = async () => {
-      try {
-        const response = await axios.get('http://localhost:3000/area_atuacao');
-        setAreasAtuacao(response.data);
-      } catch (error) {
-        console.error("Erro ao buscar áreas de atuação", error);
-        showNotification("Erro ao carregar áreas de atuação", false);
-      }
-    };
+  const fetchAreasAtuacao = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/area_atuacao');
+      setAreasAtuacao(response.data);
+    } catch (error) {
+      console.error("Erro ao buscar áreas de atuação", error);
+      showNotification("Erro ao carregar áreas de atuação", false);
+    }
+  };
 
   const addCard = () => {
     setIsModalOpen(true);
@@ -118,10 +111,7 @@ export default function Dashboard() {
       const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjs/${userId}`);
       
       const projetos = Array.isArray(data) ? data : [];
-
-      console.log(projetos)
     
-      
       const coordProjs = projetos.filter(projeto => 
         projeto.is_coordenador === true && projeto.projeto_proj_excluido === false
       );
@@ -134,12 +124,10 @@ export default function Dashboard() {
         projeto.projeto_proj_excluido === true
       );
       
-
       const notExclProjs = projetos.filter(projeto =>
         projeto.projeto_proj_excluido == false
       )
       
-      // Atualiza os estados
       setProjects(notExclProjs);
       await fetchAllEtapas(notExclProjs)
 
@@ -157,11 +145,17 @@ export default function Dashboard() {
   useEffect(() => {
     if (!projects || projects.length === 0) {
       setFilteredProjects([]);
-      
       return;
     }
 
     let result = [...projects];
+
+    // Filtro de coordenação
+    if (coordenaFilter !== null) {
+      result = result.filter(project => 
+        coordenaFilter ? project.is_coordenador : !project.is_coordenador
+      );
+    }
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -172,14 +166,20 @@ export default function Dashboard() {
       );
     }
 
+    // Filtro de status baseado no progresso
     if (statusFilter !== "all") {
-      if (statusFilter === "completed") {
-        result = result.filter(project => project.projeto_proj_status === 100);
-      } else if (statusFilter === "in-progress") {
-        result = result.filter(project => project.projeto_proj_status > 0 && project.projeto_proj_status < 100);
-      } else if (statusFilter === "not-started") {
-        result = result.filter(project => project.projeto_proj_status === 0);
-      }
+      result = result.filter(project => {
+        const progress = getProgress(etapasPojeto[project.projeto_proj_id] || []);
+        
+        if (statusFilter === "completed") {
+          return progress === 100;
+        } else if (statusFilter === "in-progress") {
+          return progress > 0 && progress < 100;
+        } else if (statusFilter === "not-started") {
+          return progress === 0;
+        }
+        return true;
+      });
     }
 
     if (areaFilter !== "all") {
@@ -187,12 +187,13 @@ export default function Dashboard() {
     }
 
     setFilteredProjects(result);
-  }, [projects, searchTerm, statusFilter, areaFilter]);
+  }, [projects, searchTerm, statusFilter, areaFilter, coordenaFilter, etapasPojeto]);
 
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setAreaFilter("all");
+    setCoordenaFilter(null);
   };
 
   useEffect(() => {
@@ -229,15 +230,12 @@ export default function Dashboard() {
       proj_inst_financiadoras: newProjectData.fundingInstitutions,
       proj_inst_parceiras: newProjectData.partnerInstitutions,
       proj_valor_total: newProjectData.projectValue
-
     };
 
     try {
       const response = await axios.post(`http://localhost:3000/projeto`, data);
       const projId = response.data.proj_id;
 
-
-      console.log("daiopsdaop", newProjectData.responsibles)
       for (const user of newProjectData.responsibles) {
         const relUserProj_data = {
           user_id: user?.user_id,
@@ -245,7 +243,6 @@ export default function Dashboard() {
           coordenador: user.user_id === userDataHook.user_id,
           user_email: user.email,
         };
-        console.log("daiopsdaop", relUserProj_data)
         await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
       }
 
@@ -261,7 +258,6 @@ export default function Dashboard() {
 
   const handleDelete = async (id: number) => {
     try {
-      //deixar put pois no backend apenas altera um campo
       const response = await axios.put(`http://localhost:3000/projeto/delete/${id}`);
       fetchProjetos();
       showNotification("Projeto excluído com sucesso!", true);
@@ -284,7 +280,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (initialized && authChecked) {
       fetchProjetos();
-      fetchAreasAtuacao(); // Carrega as áreas de atuação
+      fetchAreasAtuacao();
     }
   }, [initialized, authChecked]);
 
@@ -323,9 +319,9 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
           
-
-          <div className="flex flex-1 md:flex-none md:flex-row items-center gap-2 max-w-full md:max-w-[70%]">
-            <div className="relative flex-1 md:w-[250px]">
+          <div className="flex flex-1 md:flex-none md:flex-row items-center gap-2 max-w-full md:max-w-[70%] flex-wrap">
+            
+            <div className="relative flex-1 md:w-[250px] min-w-[200px] mr-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <Input
                 type="text"
@@ -359,36 +355,60 @@ export default function Dashboard() {
             </div>
 
             <select
-                value={areaFilter}
-                onChange={(e) => setAreaFilter(e.target.value)}
-                className="h-9 p-1 px-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              >
-                <option value="all">Todas as Áreas</option>
-                {areasAtuacao.map((area) => (
-                  <option key={area.area_atuacao_id} value={area.area_atuacao_id}>
-                    {area.area_atuacao_nome}
-                  </option> 
-                ))}
-              </select>
+              value={areaFilter}
+              onChange={(e) => setAreaFilter(e.target.value)}
+              className="h-9 p-1 px-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            >
+              <option value="all">Todas as Áreas</option>
+              {areasAtuacao.map((area) => (
+                <option key={area.area_atuacao_id} value={area.area_atuacao_id}>
+                  {area.area_atuacao_nome}
+                </option> 
+              ))}
+            </select>
 
-              <Button
-                variant="outline"
-                className="h-9 px-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-                onClick={()  => router.push('/dashboard/RecycleBin')} // Route lixeira
-              >
-                <Trash2 size={18} className="mr-1" />
-                  Lixeira
-              </Button>
+            <div className="flex items-center gap-2">
+              <label htmlFor="coordena-filter" className="text-sm text-gray-600 whitespace-nowrap">
+                Coordena
+              </label>
+              <Switch
+                id="coordena-filter"
+                checked={coordenaFilter === true}
+                onCheckedChange={(checked) => {
+                  if (checked) {
+                    setCoordenaFilter(true);
+                  } else if (coordenaFilter === true) {
+                    setCoordenaFilter(false);
+                  } else {
+                    setCoordenaFilter(null);
+                  }
+                }}
+                className="data-[state=checked]:bg-[#355EAF]"
+              />
+              <span className="text-sm text-gray-600">Não coordena</span>
+            </div>
 
-            {(searchTerm || statusFilter !== "all" || areaFilter !== "all") && (
-              <Button
-                variant="ghost"
-                onClick={clearFilters}
-                className="h-9 px-2 text-gray-500 text-sm"
-              >
-                Limpar
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              className="h-9 px-2 border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600 whitespace-nowrap"
+              onClick={() => router.push('/dashboard/RecycleBin')}
+            >
+              <Trash2 size={18} className="mr-1" />
+              Lixeira
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={clearFilters}
+              className={`h-9 px-2 text-sm whitespace-nowrap ${
+                (searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null) 
+                  ? "text-gray-500" 
+                  : "text-gray-300 cursor-default"
+              }`}
+              disabled={!(searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null)}
+            >
+              Limpar
+            </Button>
           </div>
         </div>
 
@@ -396,7 +416,7 @@ export default function Dashboard() {
           <hr className="border-t-2 border-[#C4D8FF] my-4" />
         </div>
 
-        {(searchTerm || statusFilter !== "all") && (
+        {(searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null) && (
           <div className="mb-4 text-sm text-gray-500">
             {filteredProjects.length === 0 ? (
               <p>Nenhum projeto encontrado com os filtros aplicados.</p>
@@ -457,7 +477,7 @@ export default function Dashboard() {
                     description={project.projeto_proj_descricao}
                     startDate={project.projeto_proj_data_inicio}
                     endDate={project.projeto_proj_data_fim || ""}
-                    progress={getProgress(etapasPojeto[project.projeto_proj_id])}
+                    progress={getProgress(etapasPojeto[project.projeto_proj_id] || [])}
                     users={project.users || []}
                     onDelete={() => handleDelete(project.projeto_proj_id)}
                     fetchProjectData={fetchProjetos}
@@ -469,7 +489,6 @@ export default function Dashboard() {
                     proj_inst_financiadoras={project.projeto_proj_inst_financiadoras}
                     proj_inst_parceiras={project.projeto_proj_inst_parceiras}
                     proj_area_atuacao_id={project.area_atuacao_id}
-
                   />
                 </div>
               ))}
