@@ -11,6 +11,7 @@ import { Trash2, Check } from "lucide-react";
 import Popup from "@/components/Feedback/popup";
 import axios from "axios";
 import { RotateCw } from "lucide-react";
+import { useUser } from "@/hook/UserData";
 
 interface CardProps {
   id: number;
@@ -72,6 +73,15 @@ export default function Cards_Projects({
   const [areasList, setAreasList] = useState<Area_atuacao[]>([]);
   const [selectedArea, setSelectedArea] = useState<number | null>(null);
   const [storedAreas, setStoredAreas] = useState<Area_atuacao[]>([]);
+  const [responsibleInput, setResponsibleInput] = useState("");
+  const [responsibles, setResponsibles] = useState<
+      { email: string; user_id?: number }[]
+    >([]);
+  const [availableUsers, setAvailableUsers] = useState<
+      { user_id: number; name: string; email: string; user_foto: string; }[]
+    >([]);
+   const userDataHook = useUser()
+  
 
   const extractProjectName = (): string => {
     if (typeof projeto_proj_nome === 'string') {
@@ -193,6 +203,20 @@ export default function Cards_Projects({
         updateData
       );
 
+      if (responsibles.length >= 1){
+        for (const user of responsibles) {
+        const relUserProj_data = {
+          user_id: user?.user_id,
+          proj_id: Number(id),
+          coordenador: user.user_id === userDataHook.user_id,
+          user_email: user.email,
+        };
+        await axios.post(`http://localhost:3000/relUserProj`, relUserProj_data);
+      }
+    }
+      
+
+
       window.location.reload();
       showNotification("Projeto atualizado com sucesso!", true);
       setIsModalOpen(false);
@@ -274,6 +298,42 @@ export default function Cards_Projects({
       return '';
     }
   };
+
+
+    
+
+     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+     const handleAddResponsible = () => {
+      const email = responsibleInput.trim();
+      if (email !== "" && emailRegex.test(email)) {
+        // Verifica se já existe
+        if (responsibles.some((r) => r.email === email)) return;
+
+        const userMatch = availableUsers.find((u) => u.email === email);
+        setResponsibles([
+          ...responsibles,
+          { email, user_id: userMatch?.user_id }
+        ]);
+        setResponsibleInput("");
+      } else {
+        alert("Por favor, insira um email válido.");
+      }
+    };
+
+      const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleAddResponsible();
+      }
+    };
+
+    const handleRemoveResponsible = (index: number) => {
+      if (responsibles[index].email === userDataHook.user_email) return;
+      setResponsibles(responsibles.filter((_, i) => i !== index));
+    };
+
+
 
   return (
     <>
@@ -392,6 +452,115 @@ export default function Cards_Projects({
             className="w-full border p-2 rounded-md mt-4"
             rows={3}
           />
+
+          <div>
+              <Label htmlFor="responsible" className="block text-sm font-medium text-gray-700 mb-1">
+                Responsáveis
+              </Label>
+              <div className="flex">
+                <Input
+                  id="responsible"
+                  type="email"
+                  placeholder="teste@example.com"
+                  value={responsibleInput}
+                  onChange={(e) => setResponsibleInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="flex-1 p-2 border border-gray-300 rounded-l-md focus:ring-2 focus:ring-blue-500"
+                />
+                <Button
+                  type="button"
+                  onClick={handleAddResponsible}
+                  className="ml-2 px-4 rounded-r-md bg-blue-600 text-white hover:bg-blue-700 transition"
+                >
+                  Adicionar
+                </Button>
+              </div>
+
+              {responsibles.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {responsibles.map((userData, index) => {
+                    // Busca detalhes do usuário se existir
+                    const userDetails = availableUsers.find((user) => user.email === userData.email);
+                    const isCreator = userData.email === userDataHook.user_email;
+                    return (
+                      <div
+                        key={index}
+                        className="relative flex items-center bg-gray-100 border border-gray-200 rounded-full shadow-sm transition hover:shadow-md px-3 py-1"
+                      >
+                        {/* Label menor com hover controlando tooltip e botão */}
+                        <div className="group relative flex items-center cursor-default">
+                          {/* Avatar ou inicial */}
+                          <div className="w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 overflow-hidden">
+                            {userDetails?.user_foto ? (
+                              <>
+                                <img
+                                  src={userDetails.user_foto}
+                                  alt="Foto do usuário"
+                                  className={`w-5 h-5 rounded-full block ${!isCreator ? "group-hover:hidden" : ""}`}
+                                />
+                                {!isCreator && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveResponsible(index)}
+                                    className="hidden group-hover:block w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 cursor-pointer"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <div
+                                  className={`w-5 h-5 rounded-full bg-gray-300 flex items-center justify-center text-gray-700  ${!isCreator ? "group-hover:hidden" : ""}`}>
+                                  {userData.email.charAt(0).toUpperCase()}
+                                </div>
+                                {!isCreator && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveResponsible(index)}
+                                    className="hidden group-hover:block w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 cursor-pointer"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* Email */}
+                          <span className="ml-2 text-sm text-gray-800">{userData.email}</span>
+
+                          {/* Tooltip (detalhes) */}
+                          <div className="absolute left-0 top-full mt-1 w-max p-2 bg-white border border-gray-300 rounded shadow-md opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity z-20">
+                            {userDetails ? (
+                              <div className="text-xs text-gray-600">
+                                <img
+                                  src={userDetails.user_foto}
+                                  alt="Foto do usuário"
+                                  className="w-10 h-10 rounded-full mb-1"
+                                />
+                                <p><strong>Nome:</strong> {userDetails.name}</p>
+                                <p><strong>Email:</strong> {userDetails.email}</p>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-gray-600">
+                                <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-700 mb-1">
+                                  {userData.email.charAt(0).toUpperCase()}
+                                </div>
+                                <p><strong>Usuário não cadastrado</strong></p>
+                                <p>{userData.email}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
 
           <div className="grid grid-cols-2 gap-4 mt-4">
             <div>
