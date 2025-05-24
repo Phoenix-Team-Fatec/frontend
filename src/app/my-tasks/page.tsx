@@ -6,6 +6,7 @@ import axios from 'axios';
 import { getUserData } from '@/utils/auth';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import SimpleAIChat from '@/components/SimpleAIChat/SimpleAIChat';
 
 interface Etapa {
   etapa_id: number;
@@ -49,7 +50,7 @@ export default function Home() {
         setLoading(true);
         const response = await axios.get(`http://localhost:3000/tarefa_usuario/${userData.user_id}`);
         
-        const tasksWithEtapa = response.data.map((task: any) => ({
+        const tasksWithEtapa = response.data.map((task: any) => ({  
           ...task,
           etapa: task.etapa ? {
             etapa_id: task.etapa.etapa_id,
@@ -81,6 +82,33 @@ export default function Home() {
     return date.toLocaleDateString('pt-BR');
   };
 
+  // Adicione esta função para forçar recarregamento das tarefas
+const refreshTasks = async () => {
+  const userData = getUserData();
+  if (!userData) return;
+
+  try {
+    const response = await axios.get(`http://localhost:3000/tarefa_usuario/${userData.user_id}`);
+    const tasksWithEtapa = response.data.map((task: any) => ({  
+      ...task,
+      etapa: task.etapa ? {
+        etapa_id: task.etapa.etapa_id,
+        etapa_nome: task.etapa.etapa_nome
+      } : {
+        etapa_id: 0,
+        etapa_nome: 'Sem etapa'
+      },
+      tarefa_data_inicio: formatDate(task.tarefa_data_inicio),
+      tarefa_data_fim: formatDate(task.tarefa_data_fim),
+      pontos_historias: task.pontos_historias
+    }));
+    setTasks(tasksWithEtapa);
+  } catch (error) {
+    console.error('Error refreshing tasks:', error);
+    toast.error('Erro ao atualizar tarefas');
+  }
+};
+
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       searchTerm === '' ||
@@ -111,6 +139,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen bg-white">
+      <SimpleAIChat onTaskUpdate={refreshTasks} />
       {/* Sidebar */}
       <div
         className={`transition-all duration-300 ease-in-out ${

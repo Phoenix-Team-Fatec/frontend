@@ -313,7 +313,7 @@ export default function Dashboard() {
         onClose={() => setShowPopup(false)}
       />
 
-      <SimpleAIChat />
+
 
       <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
