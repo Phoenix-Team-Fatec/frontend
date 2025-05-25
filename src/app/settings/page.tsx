@@ -165,7 +165,7 @@ export default function Settings() {
 
                 <div className="space-y-4 flex-grow">
                   <div className="space-y-2">
-                    <Label htmlFor="user_nome">user_nome</Label>
+                    <Label htmlFor="user_nome">Nome</Label>
                     <Input
                       id="user_nome"
                       name="user_nome"
@@ -176,7 +176,7 @@ export default function Settings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="user_sobrenome">user_Sobrenome</Label>
+                    <Label htmlFor="user_sobrenome">Sobrenome</Label>
                     <Input
                       id="user_sobrenome"
                       name="user_sobrenome"
@@ -187,7 +187,7 @@ export default function Settings() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="user_email">user_Email</Label>
+                    <Label htmlFor="user_email">Email</Label>
                     <Input
                       id="user_email"
                       name="user_email"

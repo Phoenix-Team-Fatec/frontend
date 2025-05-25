@@ -425,7 +425,7 @@ const ProjectTasks = () => {
           {isCoordenador && (
             <Button
               onClick={() => setIsStageDialogOpen(true)}
-              className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-10 px-4 rounded-lg shadow-md whitespace-nowrap"
+              className="bg-[#355EAF] hover:bg-[#2d4f95] text-white h-10 px-4 rounded-lg shadow-md whitespace-nowrap cursor-pointer"
             >
               + Criar Nova Etapa
             </Button>
@@ -512,7 +512,7 @@ const ProjectTasks = () => {
               <Dialog open={isStageDialogOpen} onOpenChange={setIsStageDialogOpen}>
                 <DialogTrigger asChild>
                   <Button
-                    className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md"
+                    className="bg-[#355EAF] hover:bg-[#2d4f95] text-white px-8 py-6 rounded-lg shadow-md cursor-pointer"
                   >
                     + Criar Nova Etapa
                   </Button>

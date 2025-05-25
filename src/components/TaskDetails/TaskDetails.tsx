@@ -594,12 +594,12 @@ export default function TaskDetails({
           <Button
             variant="outline"
             onClick={onCancel}
-            className="flex-1"
+            className="flex-1 text-blue-600 border border-blue-600 rounded-md hover:bg-blue-50 transition cursor-pointer"
           >
             Cancelar
           </Button>
           <Button
-            variant="default"
+            variant="outline"
             onClick={async () => {
               try {
                 await onSave();
@@ -609,7 +609,7 @@ export default function TaskDetails({
                 // Adicione tratamento de erro visual
               }
             }}
-            className="flex-1"
+            className="flex-1 bg-[#C5D8FF] text-[#355EAF] hover:bg-[#97b0e7] hover:text-[#37537c] cursor-pointer"
           >
             <Save size={16} className="mr-2" />
             Salvar

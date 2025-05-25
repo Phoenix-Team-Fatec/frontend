@@ -107,7 +107,7 @@ export default function StageCard({
       {isCoordenador && (
         <Button
           onClick={() => onAddTask(stage.etapa_id, minDate, maxDate)}
-          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4"
+          className="bg-[#355EAF] hover:bg-[#2d4f95] text-white w-full mb-4 cursor-pointer"
         >
           + Adicionar Tarefa
         </Button>

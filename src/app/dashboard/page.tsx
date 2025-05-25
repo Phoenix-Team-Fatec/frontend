@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<any[]>([]);
   const [coordProjects, setCoordProjects] = useState<any[]>([]);
   const [notCoordProjects, setNotCoordProjects] = useState<any[]>([]);
-  const [excludedProjects, setExcludedProjects] = useState<any[]>([]);  
+  const [excludedProjects, setExcludedProjects] = useState<any[]>([]);
   const [imageVisible, setImageVisible] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userId, setUserId] = useState(Number);
@@ -65,20 +65,20 @@ export default function Dashboard() {
   const getProgress = (etapas: any[]): number => {
     let totalTarefas = 0
     let tarefasFeitas = 0
-    
+
     try {
       etapas.forEach(etapa => {
         const tarefas = etapa.tarefas || []
-    
+
         totalTarefas += tarefas.length
         tarefasFeitas += tarefas.filter((t: any) => t.tarefa_status === true).length
       })
     } catch (error) {
       return 0
     }
-  
+
     if (totalTarefas === 0) return 0
-  
+
     return Math.round((tarefasFeitas / totalTarefas) * 100)
   }
 
@@ -109,25 +109,25 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const { data } = await axios.get(`http://localhost:3000/relUserProj/getProjs/${userId}`);
-      
+
       const projetos = Array.isArray(data) ? data : [];
-    
-      const coordProjs = projetos.filter(projeto => 
+
+      const coordProjs = projetos.filter(projeto =>
         projeto.is_coordenador === true && projeto.projeto_proj_excluido === false
       );
-      
-      const notCoordProjs = projetos.filter(projeto => 
+
+      const notCoordProjs = projetos.filter(projeto =>
         projeto.is_coordenador === false && projeto.projeto_proj_excluido === false
       );
-      
-      const exclProjs = projetos.filter(projeto => 
+
+      const exclProjs = projetos.filter(projeto =>
         projeto.projeto_proj_excluido === true
       );
-      
+
       const notExclProjs = projetos.filter(projeto =>
         projeto.projeto_proj_excluido == false
       )
-      
+
       setProjects(notExclProjs);
       await fetchAllEtapas(notExclProjs)
 
@@ -152,7 +152,7 @@ export default function Dashboard() {
 
     // Filtro de coordenação
     if (coordenaFilter !== null) {
-      result = result.filter(project => 
+      result = result.filter(project =>
         coordenaFilter ? project.is_coordenador : !project.is_coordenador
       );
     }
@@ -170,7 +170,7 @@ export default function Dashboard() {
     if (statusFilter !== "all") {
       result = result.filter(project => {
         const progress = getProgress(etapasPojeto[project.projeto_proj_id] || []);
-        
+
         if (statusFilter === "completed") {
           return progress === 100;
         } else if (statusFilter === "in-progress") {
@@ -220,7 +220,7 @@ export default function Dashboard() {
     }, 3000);
   };
 
-  const handleProjectCreation = async (newProjectData: { title: string; responsibles: { email: string; user_id?: number }[]; selectedArea: number; description: string, startDate: string, endDate: string,partnerInstitutions:string[], fundingInstitutions:string[], projectValue:number  }) => {
+  const handleProjectCreation = async (newProjectData: { title: string; responsibles: { email: string; user_id?: number }[]; selectedArea: number; description: string, startDate: string, endDate: string, partnerInstitutions: string[], fundingInstitutions: string[], projectValue: number }) => {
     const data = {
       proj_nome: newProjectData.title,
       proj_descricao: newProjectData.description,
@@ -318,9 +318,9 @@ export default function Dashboard() {
       <div className={`w-full p-8 ${contentMargin} overflow-hidden`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Projetos</h2>
-          
+
           <div className="flex flex-1 md:flex-none md:flex-row items-center gap-2 max-w-full md:max-w-[70%] flex-wrap">
-            
+
             <div className="relative flex-1 md:w-[250px] min-w-[200px] mr-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <Input
@@ -363,7 +363,7 @@ export default function Dashboard() {
               {areasAtuacao.map((area) => (
                 <option key={area.area_atuacao_id} value={area.area_atuacao_id}>
                   {area.area_atuacao_nome}
-                </option> 
+                </option>
               ))}
             </select>
 
@@ -400,11 +400,10 @@ export default function Dashboard() {
             <Button
               variant="ghost"
               onClick={clearFilters}
-              className={`h-9 px-2 text-sm whitespace-nowrap ${
-                (searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null) 
-                  ? "text-gray-500" 
+              className={`h-9 px-2 text-sm whitespace-nowrap ${(searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null)
+                  ? "text-gray-500"
                   : "text-gray-300 cursor-default"
-              }`}
+                }`}
               disabled={!(searchTerm || statusFilter !== "all" || areaFilter !== "all" || coordenaFilter !== null)}
             >
               Limpar
@@ -461,35 +460,38 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8 justify-items-start py-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-6 lg:gap-8 py-6">
               {filteredProjects.map((project) => (
-                <div key={project.projeto_proj_id} className="w-full max-w-[220px]">
-                  <Cards_Projects
-                    id={project.projeto_proj_id}
-                    projeto_proj_nome={
-                      <Link
-                        href={`/tasks?projectId=${project.projeto_proj_id}`}
-                        className="bg-white text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
-                      >
-                        {project.projeto_proj_nome}
-                      </Link>
-                    }
-                    description={project.projeto_proj_descricao}
-                    startDate={project.projeto_proj_data_inicio}
-                    endDate={project.projeto_proj_data_fim || ""}
-                    progress={getProgress(etapasPojeto[project.projeto_proj_id] || [])}
-                    users={project.users || []}
-                    onDelete={() => handleDelete(project.projeto_proj_id)}
-                    fetchProjectData={fetchProjetos}
-                    onNotify={showNotification}
-                    className="relative bg-white rounded-xl shadow-md overflow-hidden 
-                              transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/30 
-                              hover:border-blue-200 hover:-translate-y-1 hover:scale-[1.0] border-2 border-gray-100"
-                    proj_valor_total={project.projeto_proj_valor_total}
-                    proj_inst_financiadoras={project.projeto_proj_inst_financiadoras}
-                    proj_inst_parceiras={project.projeto_proj_inst_parceiras}
-                    proj_area_atuacao_id={project.area_atuacao_id}
-                  />
+                <div key={project.projeto_proj_id} className="w-full flex justify-center">
+                  <div className="w-full max-w-[280px] sm:max-w-none">
+                    <Cards_Projects
+                      id={project.projeto_proj_id}
+                      projeto_proj_nome={
+                        <Link
+                          href={`/tasks?projectId=${project.projeto_proj_id}`}
+                          className="bg-white text-[#2D57AA] hover:text-blue-700 font-medium text-lg transition-colors duration-200"
+                        >
+                          {project.projeto_proj_nome}
+                        </Link>
+                      }
+                      description={project.projeto_proj_descricao}
+                      startDate={project.projeto_proj_data_inicio}
+                      endDate={project.projeto_proj_data_fim || ""}
+                      progress={getProgress(etapasPojeto[project.projeto_proj_id] || [])}
+                      users={project.users || []}
+                      onDelete={() => handleDelete(project.projeto_proj_id)}
+                      fetchProjectData={fetchProjetos}
+                      onNotify={showNotification}
+                      className="relative bg-white rounded-xl shadow-md overflow-hidden 
+                      transition-all duration-300 hover:shadow-lg hover:shadow-blue-100/30 
+                      hover:border-blue-200 hover:-translate-y-1 hover:scale-[1.02] border-2 border-gray-100
+                      w-full h-auto min-h-[200px]"
+                      proj_valor_total={project.projeto_proj_valor_total}
+                      proj_inst_financiadoras={project.projeto_proj_inst_financiadoras}
+                      proj_inst_parceiras={project.projeto_proj_inst_parceiras}
+                      proj_area_atuacao_id={project.area_atuacao_id}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
